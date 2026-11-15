@@ -1,0 +1,173 @@
+{
+  "1": {
+    "park": "Randall's Island Park",
+    "lat": 40.7932,
+    "lng": -73.9214,
+    "photo": {
+      "small": "/photos/fields/1-480.webp",
+      "large": "/photos/fields/1-1280.webp",
+      "subject": "field",
+      "alt": "Soccer field at Randall's Island Park",
+      "title": "Randall's Island td (2021-06-07) 32 - Central Fields.jpg",
+      "author": "Tdorante10",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Randall%27s_Island_td_(2021-06-07)_32_-_Central_Fields.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "2": {
+    "park": "Central Park, North Meadow",
+    "lat": 40.7955,
+    "lng": -73.956,
+    "photo": {
+      "small": "/photos/fields/2-480.webp",
+      "large": "/photos/fields/2-1280.webp",
+      "subject": "park",
+      "alt": "Central Park, North Meadow",
+      "title": "Central Park Apr 2026 03.jpg",
+      "author": "Epicgenius",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Central_Park_Apr_2026_03.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "3": {
+    "park": "Thomas Jefferson Park",
+    "lat": 40.7934,
+    "lng": -73.9357,
+    "photo": {
+      "small": "/photos/fields/3-480.webp",
+      "large": "/photos/fields/3-1280.webp",
+      "subject": "field",
+      "alt": "Soccer field at Thomas Jefferson Park",
+      "title": "Thomas Jefferson Track And Athletic Field, East Harlem, Manhattan, New York.jpg",
+      "author": "Deansfa",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Thomas_Jefferson_Track_And_Athletic_Field,_East_Harlem,_Manhattan,_New_York.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "4": {
+    "park": "Prospect Park Parade Ground",
+    "lat": 40.651,
+    "lng": -73.9677,
+    "photo": {
+      "small": "/photos/fields/4-480.webp",
+      "large": "/photos/fields/4-1280.webp",
+      "subject": "field",
+      "alt": "Soccer field at Prospect Park Parade Ground",
+      "title": "Parade Grounds td (2019-01-27) 069 - Soccer Field 11.jpg",
+      "author": "Tdorante10",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Parade_Grounds_td_(2019-01-27)_069_-_Soccer_Field_11.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "5": {
+    "park": "Red Hook Recreation Area",
+    "lat": 40.6727,
+    "lng": -74.006,
+    "photo": {
+      "small": "/photos/fields/5-480.webp",
+      "large": "/photos/fields/5-1280.webp",
+      "subject": "field",
+      "alt": "Soccer field at Red Hook Recreation Area",
+      "title": "Red Hook Park td (2024-09-14) 040 - Baseball Field 9.jpg",
+      "author": "Tdorante10",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Red_Hook_Park_td_(2024-09-14)_040_-_Baseball_Field_9.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "6": {
+    "park": "McCarren Park",
+    "lat": 40.7206,
+    "lng": -73.9513,
+    "photo": null
+  },
+  "7": {
+    "park": "Flushing Meadows Corona Park",
+    "lat": 40.7402,
+    "lng": -73.8408,
+    "photo": {
+      "small": "/photos/fields/7-480.webp",
+      "large": "/photos/fields/7-1280.webp",
+      "subject": "field",
+      "alt": "Soccer field at Flushing Meadows Corona Park",
+      "title": "Flushing Meadows Fair Grounds td (2018-05-26) 178 - Soccer Field 7.jpg",
+      "author": "Tdorante10",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Flushing_Meadows_Fair_Grounds_td_(2018-05-26)_178_-_Soccer_Field_7.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "8": {
+    "park": "Juniper Valley Park",
+    "lat": 40.721,
+    "lng": -73.878,
+    "photo": {
+      "small": "/photos/fields/8-480.webp",
+      "large": "/photos/fields/8-1280.webp",
+      "subject": "park",
+      "alt": "Juniper Valley Park",
+      "title": "JuniperSouth1.jpg",
+      "author": "Vernon Pearson at English Wikipedia",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:JuniperSouth1.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "9": {
+    "park": "Van Cortlandt Park",
+    "lat": 40.889,
+    "lng": -73.896,
+    "photo": {
+      "small": "/photos/fields/9-480.webp",
+      "large": "/photos/fields/9-1280.webp",
+      "subject": "field",
+      "alt": "Soccer field at Van Cortlandt Park",
+      "title": "VanCortlandt Park Soccer Field February 2012.jpg",
+      "author": "Anthony22",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:VanCortlandt_Park_Soccer_Field_February_2012.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "10": {
+    "park": "Macombs Dam Park",
+    "lat": 40.827,
+    "lng": -73.93,
+    "photo": {
+      "small": "/photos/fields/10-480.webp",
+      "large": "/photos/fields/10-1280.webp",
+      "subject": "field",
+      "alt": "Soccer field at Macombs Dam Park",
+      "title": "Macombs Dam Pk td (2019-01-24) 132 - Track and Field.jpg",
+      "author": "Tdorante10",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Macombs_Dam_Pk_td_(2019-01-24)_132_-_Track_and_Field.jpg",
+      "changes": "resized and converted to WebP"
+    }
+  },
+  "11": {
+    "park": "Pelham Bay Park",
+    "lat": 40.867,
+    "lng": -73.81,
+    "photo": null
+  },
+  "12": {
+    "park": "Clove Lakes Park",
+    "lat": 40.619,
+    "lng": -74.11,
+    "photo": null
+  }
+}
