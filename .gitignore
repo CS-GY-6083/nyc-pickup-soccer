@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.DS_Store
+*.log
+
+# Redesign work files
+.img2threejs/
+design/ball/work/
+test-results/
+playwright-report/
