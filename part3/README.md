@@ -103,6 +103,8 @@ part3/
 
 ## Styling (Tailwind + shadcn)
 
+UI redesign ("Kick-off Board" direction): Figma file https://www.figma.com/design/26cjpRvKHlB0fTDevOV66P. It has three pages: Direction (moodboard, colour variables, components), Screens (desktop and mobile, plus dark Home and Player home) and Templates (T1–T5 page patterns for the pages still to build). Product context is in `PRODUCT.md`; colours live in `design/tokens.json`.
+
 The client uses Tailwind CSS v4 and shadcn-style components (including Kokonut UI and Bklit UI from their registries). The original look still works, so your existing pages need no changes.
 
 - **Old classes still work.** `card`, `form-grid`, `badge-*`, `flash-*`, and plain `<button>`, `<input>` and `<table>` look the same as before. They live in `src/styles/legacy.css`.
