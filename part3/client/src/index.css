@@ -19,8 +19,15 @@
    Tailwind's utilities with those names. */
 @source not inline("container inline");
 
-/* Dark mode follows the system setting, like the original styles. */
-@custom-variant dark (@media (prefers-color-scheme: dark));
+/* Dark mode: forced with <html data-theme="dark">, or following the system
+   when the theme is "system" (the default) and not forced light.
+   The navbar toggle sets data-theme (src/lib/theme.js). */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) { @slot; }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) { @slot; }
+  }
+}
 
 /* Tailwind/shadcn names for our tokens, so `bg-primary`, `text-muted-foreground`,
    `border-border` etc. use the app palette in light and dark mode.
@@ -49,17 +56,41 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-border: var(--border);
-  --color-input: var(--border);
-  --color-ring: var(--accent);
+  --color-input: var(--line-strong);
+  --color-ring: var(--focus);
+  --color-line-soft: var(--line-soft);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-vivid: var(--vivid);
+  --color-vivid-foreground: var(--vivid-text);
+  --color-accent-ink: var(--accent-ink);
+  --color-sign: var(--sign);
+  --color-sign-foreground: var(--sign-text);
+  --color-board: var(--board);
+  --color-flap: var(--flap);
+  --color-flap-foreground: var(--flap-text);
+  --color-flap-muted: var(--flap-muted);
+  --color-flap-go: var(--flap-go);
+  --color-flap-wait: var(--flap-wait);
+  --color-flap-stop: var(--flap-stop);
+  --color-flap-info: var(--flap-info);
+  --color-borough-mn: var(--borough-mn);
+  --color-borough-bk: var(--borough-bk);
+  --color-borough-qn: var(--borough-qn);
+  --color-borough-bx: var(--borough-bx);
+  --color-borough-si: var(--borough-si);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: var(--r-flap);
+  --radius-md: var(--r-control);
+  --radius-lg: var(--r-sign);
+  --radius-xl: var(--r-card);
+  --radius-2xl: var(--r-panel);
 
-  /* Self-hosted fonts (imported in main.jsx). Not applied to the original
-     pages yet; the redesign switches them on. */
+  /* Self-hosted fonts (imported in main.jsx). */
   --font-sans: "Public Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: "Schibsted Grotesk Variable", "Helvetica Neue", Arial, system-ui, sans-serif;
 }

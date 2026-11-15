@@ -2,6 +2,7 @@
 // the user's home page and a logout button.
 import { NavLink, useNavigate } from 'react-router';
 import { homePath, useAuth } from '../auth/AuthContext.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
 export default function NavBar() {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export default function NavBar() {
               <NavLink to="/register">Register</NavLink>
             </>
           )}
+          <ThemeToggle />
         </nav>
       </div>
     </header>
