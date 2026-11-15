@@ -1,0 +1,65 @@
+/* Entry stylesheet (imported once in main.jsx).
+
+   Cascade layers, lowest priority first:
+     theme       design tokens (styles/tokens.css + Tailwind's theme)
+     base        Tailwind's reset
+     legacy      the original app styles (styles/legacy.css)
+     components  shadcn / Kokonut component styles
+     utilities   Tailwind classes such as px-4, bg-primary (always win)
+*/
+@layer theme, base, legacy, components, utilities;
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./styles/tokens.css" layer(theme);
+@import "./styles/legacy.css" layer(legacy);
+
+/* Our class names "container" and "inline" predate Tailwind and mean
+   something else here (page width, inline label); don't generate
+   Tailwind's utilities with those names. */
+@source not inline("container inline");
+
+/* Dark mode follows the system setting, like the original styles. */
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+/* Tailwind/shadcn names for our tokens, so `bg-primary`, `text-muted-foreground`,
+   `border-border` etc. use the app palette in light and dark mode.
+   Note: shadcn's "accent" is a subtle hover background; our --accent is the
+   brand green, which shadcn calls "primary". */
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-text);
+  --color-primary-soft: var(--accent-soft);
+  --color-secondary: var(--hover);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--hover);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--hover);
+  --color-accent-foreground: var(--text);
+  --color-destructive: var(--danger);
+  --color-destructive-soft: var(--danger-soft);
+  --color-warning: var(--warn);
+  --color-warning-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Self-hosted fonts (imported in main.jsx). Not applied to the original
+     pages yet; the redesign switches them on. */
+  --font-sans: "Public Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}

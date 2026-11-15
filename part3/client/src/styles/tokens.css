@@ -1,0 +1,45 @@
+/* Design tokens: every color and the corner radius, as CSS variables.
+   Light values first; dark values apply when the system is in dark mode.
+   index.css also exposes them to Tailwind/shadcn (bg-primary, text-muted-foreground, ...),
+   so old CSS classes and new Tailwind classes share one palette. */
+
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1c2430;
+  --muted: #5d6878;
+  --border: #dde2e8;
+  --hover: #eef1f5;
+  --accent: #1f7a4d;
+  --accent-text: #ffffff;
+  --accent-soft: #e3f3ea;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --warn: #8a5a00;
+  --warn-soft: #fff4dc;
+  --info-soft: #e8f0fb;
+  --info: #1d4f91;
+  --radius: 8px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12161c;
+    --surface: #1b2129;
+    --text: #e6eaf0;
+    --muted: #9aa5b4;
+    --border: #2d3540;
+    --hover: #242c36;
+    --accent: #3fae78;
+    --accent-text: #0d1a13;
+    --accent-soft: #1c3428;
+    --danger: #f2877d;
+    --danger-soft: #3a1f1d;
+    --warn: #f0c063;
+    --warn-soft: #3a2f17;
+    --info-soft: #1c2a3d;
+    --info: #8db8f0;
+    color-scheme: dark;
+  }
+}

@@ -78,6 +78,8 @@ part3/
   server/test/      API + database tests (npm test); helpers.js, one file per area
   client/src/
     App.jsx         every page and who may open it
+    index.css       styles entry: Tailwind, tokens, cascade layers
+    styles/         tokens.css (colours), legacy.css (original styles)
     api.js          api(): calls the server, throws readable errors
     auth/           AuthContext (useAuth), RequireRole
     components/     GameTable, GameSearchForm, MonthlyBarChart, Flash, NavBar, ...
@@ -98,6 +100,16 @@ part3/
 4. **Swap the `<ComingSoon />`** on that route in `client/src/App.jsx` for your page.
 5. **Write tests** in `server/test/<role>.test.js`. Cover the happy path and bad input: empty fields, wrong ids, the wrong role, and someone else's game. The tests call the API directly, the same way curl would, so the UI can't hide a missing server-side check. Run `npm test`.
 6. **Add your use case and its SQL** to `docs/USE_CASES.md`.
+
+## Styling (Tailwind + shadcn)
+
+The client uses Tailwind CSS v4 and shadcn-style components (including Kokonut UI and Bklit UI from their registries). The original look still works, so your existing pages need no changes.
+
+- **Old classes still work.** `card`, `form-grid`, `badge-*`, `flash-*`, and plain `<button>`, `<input>` and `<table>` look the same as before. They live in `src/styles/legacy.css`.
+- **New code uses Tailwind classes** with our palette: `bg-primary` (brand green), `text-muted-foreground`, `border-border`, `bg-card`, `text-destructive`. All colours are defined once, in `src/styles/tokens.css`, and dark mode follows the system setting.
+- **Adding a component:** run `npx shadcn@latest add button` (shadcn), `npx shadcn@latest add @kokonutui/<name>`, or `npx shadcn@latest add @bklit/<name>` from `client/`. Components land in `src/components/ui/`. Import with `@/`, which means `src/` (e.g. `import { cn } from '@/lib/utils'`).
+- **Custom markup made only of Tailwind classes:** put `data-ui` on its outermost element, so the old styles don't leak into it.
+- **Layer order** (`src/index.css`): Tailwind reset, then old styles, then components, then Tailwind classes. A Tailwind class always wins.
 
 ## Requirements checklist (course spec, Part 3)
 

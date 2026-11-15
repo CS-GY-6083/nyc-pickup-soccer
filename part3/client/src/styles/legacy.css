@@ -1,46 +1,24 @@
-/* NYC Pickup Soccer: simple, plain styles. Colors are variables so
-   pages and charts stay consistent (and dark mode works). */
+/* The app's original styles, kept working while pages move to Tailwind.
+   Loaded into the "legacy" cascade layer (see index.css): after Tailwind's
+   reset, before Tailwind components and utilities.
 
-:root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --text: #1c2430;
-  --muted: #5d6878;
-  --border: #dde2e8;
-  --hover: #eef1f5;
-  --accent: #1f7a4d;
-  --accent-text: #ffffff;
-  --accent-soft: #e3f3ea;
-  --danger: #b42318;
-  --danger-soft: #fdecea;
-  --warn: #8a5a00;
-  --warn-soft: #fff4dc;
-  --info-soft: #e8f0fb;
-  --info: #1d4f91;
-  --radius: 8px;
-  color-scheme: light;
-}
+   Teammates: these class names (card, form-grid, badge-*, flash-*, ...) and
+   the plain <button>/<input>/<table> looks are still supported. */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #12161c;
-    --surface: #1b2129;
-    --text: #e6eaf0;
-    --muted: #9aa5b4;
-    --border: #2d3540;
-    --hover: #242c36;
-    --accent: #3fae78;
-    --accent-text: #0d1a13;
-    --accent-soft: #1c3428;
-    --danger: #f2877d;
-    --danger-soft: #3a1f1d;
-    --warn: #f0c063;
-    --warn-soft: #3a2f17;
-    --info-soft: #1c2a3d;
-    --info: #8db8f0;
-    color-scheme: dark;
-  }
-}
+/* Tailwind's reset (preflight) removes browser defaults that the rules below
+   rely on: paragraph and list spacing, bold headings, link underlines, form
+   control looks. Put the browser defaults back for the original markup only.
+   New components keep the reset: shadcn parts carry data-slot, and anything
+   inside an element with data-ui is left alone. */
+:where(*):where(:not([data-slot], [data-ui], [data-ui] *)) { all: revert; }
+:where(input, textarea):where(:not([data-slot], [data-ui] *))::placeholder { all: revert; }
+:where(input):where(:not([data-slot], [data-ui] *))::-webkit-date-and-time-value,
+:where(input):where(:not([data-slot], [data-ui] *))::-webkit-datetime-edit,
+:where(input):where(:not([data-slot], [data-ui] *))::-webkit-datetime-edit-fields-wrapper,
+:where(input):where(:not([data-slot], [data-ui] *))::-webkit-datetime-edit-year-field,
+:where(input):where(:not([data-slot], [data-ui] *))::-webkit-datetime-edit-month-field,
+:where(input):where(:not([data-slot], [data-ui] *))::-webkit-datetime-edit-day-field,
+:where(input):where(:not([data-slot], [data-ui] *))::-webkit-calendar-picker-indicator { all: revert; }
 
 * { box-sizing: border-box; }
 
@@ -51,9 +29,9 @@ body {
   font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-h1 { font-size: 1.6rem; margin: 0.5rem 0 1rem; }
-h2 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; }
-a { color: var(--accent); }
+:where(h1):where(:not([data-slot], [data-ui] *)) { font-size: 1.6rem; margin: 0.5rem 0 1rem; }
+:where(h2):where(:not([data-slot], [data-ui] *)) { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; }
+:where(a):where(:not([data-slot], [data-ui] *)) { color: var(--accent); }
 
 .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem 16px 3rem; }
 .narrow { max-width: 460px; margin: 0 auto; }
@@ -80,22 +58,22 @@ a { color: var(--accent); }
 }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem 1rem; align-items: end; }
 .form-stack { display: flex; flex-direction: column; gap: 0.75rem; }
-label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; font-weight: 500; }
+:where(label):where(:not([data-slot], [data-ui] *)) { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; font-weight: 500; }
 label.inline { flex-direction: row; align-items: center; gap: 0.4rem; font-weight: 400; }
-fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; }
-legend { font-size: 0.9rem; font-weight: 500; padding: 0; margin-bottom: 0.25rem; width: 100%; }
+:where(fieldset):where(:not([data-slot], [data-ui] *)) { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; }
+:where(legend):where(:not([data-slot], [data-ui] *)) { font-size: 0.9rem; font-weight: 500; padding: 0; margin-bottom: 0.25rem; width: 100%; }
 .role-choice { flex-direction: column; align-items: flex-start; }
 .date-range { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
 .form-actions { display: flex; gap: 0.5rem; }
 
-input, select, textarea {
+:where(input, select, textarea):where(:not([data-slot], [data-ui] *)) {
   font: inherit; color: var(--text); background: var(--surface);
   border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 0.6rem; min-width: 0;
 }
 input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); }
 input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-button {
+:where(button):where(:not([data-slot], [data-ui] *)) {
   font: inherit; font-weight: 600; cursor: pointer;
   background: var(--accent); color: var(--accent-text);
   border: 1px solid var(--accent); border-radius: 6px; padding: 0.45rem 0.9rem;
@@ -113,9 +91,9 @@ button:disabled { opacity: 0.55; cursor: default; }
 
 /* Tables */
 .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
-th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); font-weight: 600; }
+:where(table):where(:not([data-slot], [data-ui] *)) { width: 100%; border-collapse: collapse; }
+:where(th, td):where(:not([data-slot], [data-ui] *)) { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+:where(th):where(:not([data-slot], [data-ui] *)) { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); font-weight: 600; }
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: var(--hover); }
 table.compact th, table.compact td { padding: 0.35rem 0.75rem; }
