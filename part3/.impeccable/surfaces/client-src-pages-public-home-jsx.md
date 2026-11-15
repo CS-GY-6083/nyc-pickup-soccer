@@ -5,20 +5,20 @@ primary_target: "client/src/pages/public/Home.jsx"
 related_targets: ["client/src/pages/public/GameStatus.jsx"]
 ---
 
-# Surface: public home (game search) — the Kick-off Board
+# Surface: public home (game search) — Kick-off Board v2 "Matchday Line"
 
-Scope: `client/src/pages/public/Home.jsx`. The world it sets also governs every other page; those pages are Operate surfaces that inherit the world without the flap theatrics.
-Visitor mode: Persuade. The home page is both the public landing page and the working "search upcoming games" use case.
-Audience and job: NYC pickup players (phone and laptop equally) find an upcoming game and see whether it is on. Course graders run the search use case on a laptop.
-Action: the search itself (borough, field text, one day or a date range, format, level) and the results; Log in / Join leads to the role pages.
-Proof and content: real seed games, fields, boroughs and statuses (synthetic data). No invented user counts or claims.
-Memorable moment: the board flaps clatter into place once, and the next kick-off prints on double-height flaps.
-Unresolved: final copy strings in the soccer-slang voice; the ball reference photo.
+Scope: `client/src/pages/public/Home.jsx`. The world it sets governs every page. The other pages are Operate surfaces and inherit it without the board theatrics. The revised wire is the clickable prototype in `client/prototype`.
+Visitor mode: Persuade. The page is both the public landing page and the working "search upcoming games" use case.
+Audience and job: NYC pickup players (phone and laptop equally) find an upcoming game, see where it is and whether it's on, and open the field or the players. Course graders run the search use case on a laptop.
+Action: the search (borough, field text, one day or a date range, format, level) and the results. Join, Log in and the field and player pages follow from it.
+Proof and content: real seed games and fields with credited park photos and map links. Stats are labelled as sample data where no API exists yet. No invented user counts.
+Memorable moment: the board rows flip into place with the next kick-off on large tiles, under a glowing NYC skyline.
+Changed by user pins (v2): green and white, vivid, glow, a light/dark toggle, subway-signage inspiration, the landmark skyline, rounder corners, readable type with no line through text, photos, and more information. These pins beat the original roll wherever they conflict.
 
 ## Direction contract
-THESIS: Every pickup game is a departure on one split-flap board (kick-off, field, borough, format, spots, status), so finding a game reads like catching a train. It refuses the category default of a search bar over a stack of rounded game cards.
-OWN-WORLD: The board is a matte black housing (#14171b), with flap faces in graphite (#262b31) and off-white flap letters (#f3f0e7). Status colours are signal amber (#f2b134, waiting for the field), pitch green (#2f9e5c, confirmed) and red (#e2483d, cancelled). Brass hairlines frame the board, and a hinge seam crosses every flap. The concourse around the board is daylight grey, never cream. Type is condensed board capitals (Barlow Condensed) for flaps and headings, a monospace face for times and numbers, and Public Sans for running text. Status always shows a word, never colour alone.
-STORY: The visitor sees that games happen on approved NYC fields, believes it because every row shows its field-booking status, and searches or joins in one move.
-FIRST VIEWPORT: A full-width KICK-OFFS board fills the fold. Its header rail holds the working search: flap-switch selectors for borough, day or range, format and level, plus a search button. Below the rail, rows of flaps hold the next games. The next kick-off sits on double-height flaps. The 3D ball hangs at the top right as the hall clock. The primary action is the search button on the rail.
-FORM: split-flap departure board, candidate 5 of 7 on the ordered list; seed:463fb0375b2c8374. Raises: identical rows read as a ruler, and counts settle with weighted overshoot (VU meter). Capacity states are OPEN, FILLING, LAST SPOTS and FULL (tensegrity). Columns drop in whole flaps (pastel sheet). Emphasis comes from size, never colour (Massin). Filters re-flap rows in place (ebru). Signature interaction: the flap clatter when results change, which is skipped under reduced motion.
+THESIS: Every pickup game is a departure on a green-and-white matchday board under the NYC skyline: where, when, which borough, how many spots, and whether it's on. It refuses the category default of a search bar over a stack of rounded game cards on grey.
+OWN-WORLD: Chalk-white grounds, with vivid pitch green (OKLCH) carrying hero bands and actions. Dark mode is night-green depth layers, not black, with neon-green glow on primary and live elements only. Black subway-style sign bands with a thin white rule and white Schibsted Grotesk lettering. Our own borough bullets (MN, BK, QN, BX, SI) in vivid accents. Rounded two-tone flap tiles with edge notches and no line through the text. Duotone park photos blended with multiply. Alpha hairline borders. Concentric radii (card 20, control 12, pill).
+STORY: The visitor sees real NYC fields and games, believes it because every game shows its field, photo, map link and booking status in words, and searches, opens a field or joins in one move.
+FIRST VIEWPORT: The skyline (Empire State, Chrysler, The Edge, Brooklyn Bridge) glows across the top of a green hero band, over a collage of field photos. The headline sits on a sign band, with the working search rail (borough bullets, day or range, format, level, Find games) set on white or night. The board's next kick-off sits on large tiles directly below. The primary action is Find games.
+FORM: departure board refined into a matchday sign system. Candidate 5 of 7 on the original ordered list; seed:463fb0375b2c8374, plus the user pins of 2026-11-15. Raises kept: identical rows as a ruler; OPEN/FILLING/LAST/FULL states; columns drop in whole tiles; emphasis by size, never colour; filters re-flip rows in place. Signature interaction: rows flip in on load and on filter changes, with blurred icon swaps (Join → Joined, theme). Instant under reduced motion.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

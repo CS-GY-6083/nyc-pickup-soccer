@@ -39,13 +39,23 @@ A game shows "waiting for field approval" until its booking is approved. If the 
 - There is no money anywhere: no fees and no payments. The airline spec's "spending" and "revenue" become games/hours played and field-usage hours.
 - The demo may run on campus Wi-Fi or offline, so nothing loads from a CDN at runtime.
 - The data is synthetic: made-up players, games, bookings and ratings, on 12 hand-entered approximations of real NYC Parks fields.
-- No official marks: no NYC Parks, MTA/subway, NYCFC, MLS or other team or agency logos, names styled as endorsements, or trademarked signage. NYC references must be original artwork.
+- No official marks: no NYC Parks, MTA/subway, NYCFC, MLS or other team or agency logos, and no names styled as endorsements. Subway signage is inspiration only: no MTA logo, and no real route bullets or line letters. We use our own borough marks MN, BK, QN, BX and SI. Landmark silhouettes and all NYC references are original artwork.
+- Field photos are Creative Commons or public-domain images from Wikimedia Commons, each credited (`client/src/data/field-photos.json`). Fields with no usable free photo show a borough plate. Player profiles are visible to logged-in users only and never show email addresses.
 - Shared components and CSS class names are a public API for teammates' pages, so they must stay backward compatible.
 - Undecided: the 3D soccer-ball reference photo. It must be a photo the team owns or one under CC0, with no brand logos.
 
 ## Brand Commitments
 - **Name:** "NYC Pickup Soccer" (the full project title is "NYC Athletic Field Reservation & Pickup Soccer System").
 - **Direction the user made binding:** fun, cool, and themed around NYC soccer.
+- **Pins added after reviewing the first wireframe (2026-11-15):**
+  - mostly green and white, vivid and colourful, with glow effects
+  - light and dark themes with a toggle
+  - softer, rounder corners
+  - readable type, with no line drawn through text
+  - NYC subway signage as inspiration: black sign bands, white grotesk lettering, coloured circle bullets
+  - a skyline with recognisable NYC landmarks: Empire State, Chrysler, The Edge, Brooklyn Bridge
+  - field photos wherever possible
+  - more information: locations, map links, player details and stats
 - **Voice:** soccer slang throughout. Headings, buttons, empty states and confirmations speak the language of pickup soccer and NYC (kick-off, full time, the squad, offside). Every use case must still be recognizable from its label, the slang never hides what an action does, and error messages stay exact about what went wrong and how to fix it.
 
 ## Evidence on Hand

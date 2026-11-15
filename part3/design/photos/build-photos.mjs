@@ -13,6 +13,10 @@ const here = (p) => new URL(p, import.meta.url);
 const root = new URL('../../', import.meta.url);
 const geo = JSON.parse(readFileSync(here('candidates.json')));
 const text = JSON.parse(readFileSync(here('candidates-search.json')));
+const stock = JSON.parse(readFileSync(here('candidates-stock.json'))).stock;
+// Fields with no usable photo of their own get a credited generic pitch
+// photo, clearly labelled as a stock photo (never passed off as the field).
+const STOCK_PICKS = { 6: 5, 11: 3, 12: 6 };
 // id: [source ('geo' | 'text'), candidate n, subject ('field' | 'park')]
 const PICKS = {
   1: ['text', 0, 'field'], 2: ['geo', 2, 'park'], 3: ['geo', 0, 'field'], 4: ['text', 1, 'field'],
@@ -42,8 +46,19 @@ for (const [id, [park, lat, lng]] of Object.entries(PLACES)) {
       changes: 'resized and converted to WebP',
     };
   }
+  if (!pick && STOCK_PICKS[id] !== undefined) {
+    const c = stock[STOCK_PICKS[id]];
+    const raw = fileURLToPath(here(`raw/stock-${c.n}.jpg`));
+    for (const w of [480, 1280]) execFileSync('cwebp', ['-quiet', '-q', w === 480 ? '70' : '74', '-resize', String(w), '0', '-metadata', 'none', raw, '-o', fileURLToPath(new URL(`${id}-${w}.webp`, outDir))]);
+    entry.photo = {
+      small: `/photos/fields/${id}-480.webp`, large: `/photos/fields/${id}-1280.webp`, subject: 'stock', stock: true,
+      alt: 'Stock photo of a soccer field (not this field)',
+      title: c.title.replace(/^File:/, ''), author: c.author, license: c.license, licenseUrl: c.licenseUrl, sourceUrl: c.sourceUrl,
+      changes: 'resized and converted to WebP; generic stock photo, not this field',
+    };
+  }
   data[id] = entry;
 }
 mkdirSync(new URL('client/src/data/', root), { recursive: true });
 writeFileSync(new URL('client/src/data/field-photos.json', root), JSON.stringify(data, null, 2) + '\n');
-console.log(`photos for ${Object.keys(PICKS).length} of ${Object.keys(PLACES).length} fields`);
+console.log(`photos: ${Object.keys(PICKS).length} real + ${Object.keys(STOCK_PICKS).length} stock, ${Object.keys(PLACES).length} fields`);

@@ -50,11 +50,25 @@ function score(p, park) {
   return s;
 }
 mkdirSync(new URL('raw/', import.meta.url), { recursive: true });
+const STOCK = process.argv.includes('--stock');
 const si = process.argv.indexOf('--search');
 const only = si > 0 ? process.argv[si + 1].split(',') : null;
-const outFile = only ? 'candidates-search.json' : 'candidates.json';
+const outFile = STOCK ? 'candidates-stock.json' : only ? 'candidates-search.json' : 'candidates.json';
 const out = {};
-for (const [id, f] of Object.entries(FIELDS)) {
+if (STOCK) {
+  // Generic pitch photos for fields with no usable photo of their own.
+  let pages = [];
+  for (const q of ['soccer field artificial turf', 'football pitch goal net', 'soccer goal grass field', 'soccer field lines']) pages = pages.concat(await query({ generator: 'search', gsrsearch: `${q} filetype:bitmap`, gsrnamespace: '6', gsrlimit: '12' }));
+  const seen = new Set();
+  const ok = pages.filter((p) => !seen.has(p.title) && seen.add(p.title)).filter((p) => {
+    const ii = p.imageinfo?.[0]; const lic = ii?.extmetadata?.LicenseShortName?.value ?? '';
+    return ii && /\.(jpe?g)$/i.test(p.title) && ii.width >= 1200 && ALLOWED.test(lic) && !/nc|nd/i.test(lic.replace(/^cc0/i, '')) && !strip(ii.extmetadata?.Restrictions?.value);
+  }).filter((p) => !/stadium|match|player|team|fc |club|crowd|vs\.?|cup/i.test(p.title)).slice(0, 8);
+  out.stock = ok.map((p, n) => { const ii = p.imageinfo[0]; const m = ii.extmetadata; return { n, title: p.title, author: strip(m.Artist?.value) || 'Unknown', license: m.LicenseShortName.value, licenseUrl: m.LicenseUrl?.value ?? '', sourceUrl: ii.descriptionurl, thumb: ii.thumburl }; });
+  for (const c of out.stock) { const res = await politeFetch(c.thumb); writeFileSync(new URL(`raw/stock-${c.n}.jpg`, import.meta.url), Buffer.from(await res.arrayBuffer())); }
+  console.log(out.stock.map((c) => `${c.n}: ${c.title.slice(5, 70)} [${c.license}]`).join('\n'));
+}
+for (const [id, f] of Object.entries(STOCK ? {} : FIELDS)) {
   if (only && !only.includes(id)) continue;
   let pages = [];
   if (only) {

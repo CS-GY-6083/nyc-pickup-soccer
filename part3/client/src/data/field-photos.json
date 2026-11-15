@@ -88,7 +88,19 @@
     "park": "McCarren Park",
     "lat": 40.7206,
     "lng": -73.9513,
-    "photo": null
+    "photo": {
+      "small": "/photos/fields/6-480.webp",
+      "large": "/photos/fields/6-1280.webp",
+      "subject": "stock",
+      "stock": true,
+      "alt": "Stock photo of a soccer field (not this field)",
+      "title": "College Point Fields td (2019-08-03) 178 - Turf Soccer Field.jpg",
+      "author": "Tdorante10",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:College_Point_Fields_td_(2019-08-03)_178_-_Turf_Soccer_Field.jpg",
+      "changes": "resized and converted to WebP; generic stock photo, not this field"
+    }
   },
   "7": {
     "park": "Flushing Meadows Corona Park",
@@ -162,12 +174,36 @@
     "park": "Pelham Bay Park",
     "lat": 40.867,
     "lng": -73.81,
-    "photo": null
+    "photo": {
+      "small": "/photos/fields/11-480.webp",
+      "large": "/photos/fields/11-1280.webp",
+      "subject": "stock",
+      "stock": true,
+      "alt": "Stock photo of a soccer field (not this field)",
+      "title": "Soccer field at Brastad arena 2.jpg",
+      "author": "W.carter",
+      "license": "CC0",
+      "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Soccer_field_at_Brastad_arena_2.jpg",
+      "changes": "resized and converted to WebP; generic stock photo, not this field"
+    }
   },
   "12": {
     "park": "Clove Lakes Park",
     "lat": 40.619,
     "lng": -74.11,
-    "photo": null
+    "photo": {
+      "small": "/photos/fields/12-480.webp",
+      "large": "/photos/fields/12-1280.webp",
+      "subject": "stock",
+      "stock": true,
+      "alt": "Stock photo of a soccer field (not this field)",
+      "title": "Soccer field at Brastad arena 6.jpg",
+      "author": "W.carter",
+      "license": "CC0",
+      "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Soccer_field_at_Brastad_arena_6.jpg",
+      "changes": "resized and converted to WebP; generic stock photo, not this field"
+    }
   }
 }
