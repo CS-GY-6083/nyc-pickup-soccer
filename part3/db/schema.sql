@@ -17,12 +17,15 @@
 --                map and "near me" distances (CHECK: inside New York City)
 --   GameRating : players rate and comment on games they played
 --   session    : login sessions for the web app (connect-pg-simple)
--- The two new tables are at the end of the file.
+--   GameState  : view with each game's current status (Game on, In play, ...)
+-- The new tables and the view are at the end of the file. Database roles
+-- and their privileges are in roles.sql (run by reset.sh after this file).
 --
 -- Run:  ./reset.sh   (or psql -d nyc_fields -f schema.sql)
 -- The script is re-runnable: it drops existing tables first.
 -- =====================================================================
 
+DROP VIEW IF EXISTS GameState;
 DROP TABLE IF EXISTS session, GameRating, GameRegistration, PickupGame, Reservation,
                      FieldClosure, FieldOperatingHours, Field, Users CASCADE;
 
@@ -336,3 +339,38 @@ CREATE TABLE session (
 );
 
 CREATE INDEX idx_session_expire ON session (expire);
+
+
+-- ---------------------------------------------------------------------
+-- GameState (view): the status the app shows for each game. Worked out
+-- from the stored facts every time it is read, so it can never go stale
+-- (a stored column would need updating the moment a game kicks off).
+--   cancelled      the game was cancelled, or its field booking was
+--                  rejected or withdrawn                    "Called off"
+--   completed      marked completed by the organizer        "Completed"
+--   not_approved   kickoff passed while the booking was still
+--                  pending                         "Field never approved"
+--   finished       end time has passed, not marked completed "Full time"
+--   in_progress    between kickoff and end time               "In play"
+--   confirmed      still to come, field booking approved      "Game on"
+--   pending_field  still to come, booking waiting for an admin
+--                                                 "Waiting on the field"
+-- The order of the WHEN branches matters: the first match wins.
+-- A player's own place in a game ("You're in" / "You left") is not here:
+-- it depends on who is asking (see gameListSql in server/src/lib/games.js).
+-- ---------------------------------------------------------------------
+CREATE VIEW GameState AS
+SELECT g.game_id,
+       CASE
+           WHEN g.status = 'cancelled'                 THEN 'cancelled'
+           WHEN g.status = 'completed'                 THEN 'completed'
+           WHEN r.status IN ('rejected', 'cancelled')  THEN 'cancelled'
+           WHEN r.status = 'pending'
+            AND r.start_time <= nyc_now()              THEN 'not_approved'
+           WHEN r.end_time   <= nyc_now()              THEN 'finished'
+           WHEN r.start_time <= nyc_now()              THEN 'in_progress'
+           WHEN r.status = 'approved'                  THEN 'confirmed'
+           ELSE 'pending_field'
+       END AS game_state
+FROM PickupGame g
+JOIN Reservation r ON r.reservation_id = g.reservation_id;

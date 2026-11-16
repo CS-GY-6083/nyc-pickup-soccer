@@ -70,11 +70,13 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
 - Docs: each owner writes their own section of `USE_CASES.md`.
 
 ## Hosting (Vercel + Neon)
-- **What runs where:** the site is the Vercel project `nyc-pickup-soccer`. The React build is served as static files, and the Express API runs as one serverless function: `api/index.js` imports `server/src/app.js`, and `vercel.json` routes `/api/*` to it. The database is a free Neon Postgres, connected to the project as `DATABASE_URL`.
+- **What runs where:** the site is the Vercel project `nyc-pickup-soccer`. The React build is served as static files, and the Express API runs as one serverless function: `api/index.js` imports `server/src/app.js`, and `vercel.json` routes `/api/*` to it. The database is a free Neon Postgres. Vercel's Neon integration adds `DATABASE_URL` (the owner account).
+- **The app connects as `soccer_web`, not the owner:** `APP_DATABASE_URL` in Vercel (production) is the pooled Neon URL with the `soccer_web` login, which has only the `soccer_app` privileges (`db/roles.sql`). The owner URL is only for `db/reset.sh`. To recreate the login (e.g. on a new database): `APP_DB_PASSWORD=<new password> DATABASE_URL=<owner unpooled URL> db/create_app_login.sh`, then update `APP_DATABASE_URL` and redeploy.
+- **New writes need a grant:** if your use case writes somewhere new (a new table or column), add the `GRANT` to `db/roles.sql`. `npm test` runs the API as `soccer_app`, so a missing grant fails your tests with "permission denied".
 - **Deploy:** from `part3/`, run `vercel deploy --prod`. Git auto-deploy needs Vercel's GitHub app installed on the CS-GY-6083 org (Jason).
 - **Refresh the hosted data** (before screenshots and the demo, as for local):
   1. `vercel env pull .env.local` in `part3/`.
-  2. `DATABASE_URL="<DATABASE_URL_UNPOOLED from .env.local>" db/reset.sh`.
+  2. `DATABASE_URL="<DATABASE_URL_UNPOOLED from .env.local>" db/reset.sh`. This rebuilds the tables, the view and the role grants. The `soccer_web` login itself survives a reset.
 
   Never commit `.env.local`.
 

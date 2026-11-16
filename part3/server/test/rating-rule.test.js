@@ -4,7 +4,8 @@
 // Each test runs in a transaction that is rolled back.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { pool } from '../src/db.js';
+// As the database owner: this tests the database rule itself, not the app.
+import { ownerPool as pool } from './owner-db.js';
 import { toHttpError } from '../src/lib/errors.js';
 
 after(() => pool.end());

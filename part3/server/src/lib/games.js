@@ -68,7 +68,8 @@ signups AS (
 )`;
 
 // One row per game, with its field, booking, organizer and head count.
-// game_state is what the UI shows as the game's status:
+// game_state is what the UI shows as the game's status. The rules live in
+// the database, in the GameState view (db/schema.sql):
 //   cancelled | completed      : the stored game status (a rejected or
 //                                cancelled field booking also counts as cancelled)
 //   not_approved               : kickoff passed but the booking was never approved
@@ -105,21 +106,12 @@ SELECT g.game_id,
        f.surface_type,
        o.user_id                                AS organizer_id,
        o.name                                   AS organizer_name,
-       CASE
-           WHEN g.status = 'cancelled'           THEN 'cancelled'
-           WHEN g.status = 'completed'           THEN 'completed'
-           WHEN r.status IN ('rejected', 'cancelled') THEN 'cancelled'
-           WHEN r.status = 'pending'
-            AND r.start_time <= nyc_now()        THEN 'not_approved'
-           WHEN r.end_time   <= nyc_now()        THEN 'finished'
-           WHEN r.start_time <= nyc_now()        THEN 'in_progress'
-           WHEN r.status = 'approved'            THEN 'confirmed'
-           ELSE 'pending_field'
-       END                                      AS game_state,
+       gs.game_state,
        ${mine}                                  AS my_registration,
        r.start_time <= nyc_now() + INTERVAL '24 hours' AS leave_closed
 FROM PickupGame g
 JOIN Reservation r ON r.reservation_id = g.reservation_id
+JOIN GameState gs  ON gs.game_id = g.game_id
 JOIN Field f       ON f.field_id = r.field_id
 JOIN Users o       ON o.user_id = g.organizer_id
 LEFT JOIN signups s ON s.game_id = g.game_id${meJoin}`;

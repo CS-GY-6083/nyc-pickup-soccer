@@ -4,7 +4,26 @@ Every query uses `$n` parameters (prepared statements). "Now" is `nyc_now()`, th
 
 ## Shared: game list (`server/src/lib/games.js`)
 
-Most pages that list games use one query, `gameListSql(where)`, based on Part 2 Q1/Q4. It returns each game with its field, booking, organizer and number of active sign-ups, plus a computed `game_state`:
+Most pages that list games use one query, `gameListSql(where)`, based on Part 2 Q1/Q4. It returns each game with its field, booking, organizer and number of active sign-ups, plus its `game_state` from the `GameState` view.
+
+The game-state rules live in the database, in the view `GameState` (`db/schema.sql`). It is worked out from the stored facts every time it is read, so it can never go stale. A stored status column would need updating the moment a game kicks off. The first matching branch wins:
+```sql
+CREATE VIEW GameState AS
+SELECT g.game_id,
+       CASE WHEN g.status = 'cancelled'                 THEN 'cancelled'    -- "Called off"
+            WHEN g.status = 'completed'                 THEN 'completed'    -- "Completed"
+            WHEN r.status IN ('rejected', 'cancelled')  THEN 'cancelled'
+            WHEN r.status = 'pending'
+             AND r.start_time <= nyc_now()              THEN 'not_approved' -- "Field never approved"
+            WHEN r.end_time   <= nyc_now()              THEN 'finished'     -- "Full time"
+            WHEN r.start_time <= nyc_now()              THEN 'in_progress'  -- "In play"
+            WHEN r.status = 'approved'                  THEN 'confirmed'    -- "Game on"
+            ELSE 'pending_field' END AS game_state                         -- "Waiting on the field"
+FROM PickupGame g
+JOIN Reservation r ON r.reservation_id = g.reservation_id;
+```
+
+The game list:
 
 ```sql
 WITH signups AS (
@@ -19,17 +38,10 @@ SELECT g.game_id, g.format, g.skill_level, g.max_players, g.status AS game_statu
        r.reservation_id, r.start_time, r.end_time, r.status AS booking_status, r.rejection_reason,
        f.field_id, f.name AS field_name, f.borough, f.location, f.surface_type,
        o.user_id AS organizer_id, o.name AS organizer_name,
-       CASE WHEN g.status = 'cancelled'                 THEN 'cancelled'
-            WHEN g.status = 'completed'                 THEN 'completed'
-            WHEN r.status IN ('rejected', 'cancelled')  THEN 'cancelled'
-            WHEN r.status = 'pending'
-             AND r.start_time <= nyc_now()              THEN 'not_approved'
-            WHEN r.end_time   <= nyc_now()              THEN 'finished'
-            WHEN r.start_time <= nyc_now()              THEN 'in_progress'
-            WHEN r.status = 'approved'                  THEN 'confirmed'
-            ELSE 'pending_field' END AS game_state
+       gs.game_state
 FROM PickupGame g
 JOIN Reservation r ON r.reservation_id = g.reservation_id
+JOIN GameState gs  ON gs.game_id = g.game_id
 JOIN Field f       ON f.field_id = r.field_id
 JOIN Users o       ON o.user_id = g.organizer_id
 LEFT JOIN signups s ON s.game_id = g.game_id
@@ -66,6 +78,21 @@ g.status = 'scheduled' AND r.status IN ('approved', 'pending') AND r.start_time 
 - **Ratings only from people who signed up:** the composite foreign key to `GameRegistration`.
 - **One field per name (`uq_field_name`).** A unique index on `lower(Field.name)`, so "Pier 40 Field 2" and "pier 40 field 2" count as the same field. Adding a duplicate (A2) gives "A field with this name already exists."
 - **Field coordinates inside NYC (`chk_field_in_nyc`).** `Field.latitude` must be 40.49–40.92 and `Field.longitude` −74.27 to −73.68, which catches swapped or mistyped coordinates. Used by the field map (P6).
+- **Game states (view `GameState`).** See "Shared: game list" above.
+
+## Database roles (`db/roles.sql`)
+The app has two layers of access control:
+- **Its own login.** md5 passwords, sessions stored in Postgres, and the `player` / `organizer` / `admin` role in `Users.role`, checked on every protected API request (`middleware/auth.js`).
+- **PostgreSQL roles underneath (least privilege).** If the app were ever tricked into running the wrong SQL, the database would still refuse anything outside the app's job.
+
+| Role | Can | Cannot |
+|---|---|---|
+| `soccer_app` (group; the hosted app logs in as its member `soccer_web`) | `SELECT` every table and `GameState`; `INSERT` into every table; `UPDATE` only `Reservation(status, reviewed_by, reviewed_at, rejection_reason)`, `PickupGame(status)`, `GameRegistration(registration_status, joined_at)` and `GameRating(rating, comment)`; `DELETE` only from `session` | delete game data (sign-ups are cancelled, not deleted), `TRUNCATE`, change any other column (e.g. make someone an admin, move a booking's time), create, alter or drop tables |
+| `soccer_readonly` (group, for reports) | `SELECT` the game tables and `GameState`; `Users(user_id, name, role)` only | see `password_hash`, `email` or `session`; change anything |
+
+- `db/reset.sh` runs `roles.sql` after `schema.sql`, because dropping a table drops its grants.
+- `db/create_app_login.sh` creates the login `soccer_web` once per database server, as a member of `soccer_app`. The password comes from the environment and never appears in the repo.
+- `npm test` runs the whole API as `soccer_app` (`DB_SET_ROLE`), so a query that needs a privilege `roles.sql` does not grant fails in the tests, not only when hosted. `test/roles.test.js` checks the "cannot" column.
 
 ## Public (Abhinav)
 

@@ -19,11 +19,24 @@ pg.types.setTypeParser(pg.types.builtins.INT8, (value) => parseInt(value, 10));
 // average rating of 4.25 should arrive as the number 4.25.
 pg.types.setTypeParser(pg.types.builtins.NUMERIC, (value) => parseFloat(value));
 
+// Which database, and as whom:
+//   APP_DATABASE_URL  hosted: the restricted login soccer_web (db/roles.sql,
+//                     db/create_app_login.sh), so the app cannot drop or
+//                     empty tables. Wins over DATABASE_URL.
+//   DATABASE_URL      e.g. postgres://localhost/nyc_fields. Without either,
+//                     node-postgres uses the PG* environment variables, then
+//                     localhost and the OS user name.
+//   DB_SET_ROLE       act as this database role on every connection (SET
+//                     ROLE). `npm test` uses soccer_app, so the whole API is
+//                     tested with exactly the privileges it has when hosted.
+const connectionString = process.env.APP_DATABASE_URL || process.env.DATABASE_URL;
+const setRole = process.env.DB_SET_ROLE;
+if (setRole && !/^[a-z_][a-z0-9_]*$/.test(setRole)) throw new Error(`DB_SET_ROLE: bad role name ${setRole}`);
+
 export const pool = new pg.Pool({
-  // e.g. postgres://localhost/nyc_fields. Without it, node-postgres uses
-  // the PG* environment variables, then localhost and the OS user name.
-  connectionString: process.env.DATABASE_URL,
-  database: process.env.DATABASE_URL ? undefined : 'nyc_fields',
+  connectionString,
+  database: connectionString ? undefined : 'nyc_fields',
+  options: setRole ? `-c role=${setRole}` : undefined,
   // Fail with an error instead of waiting forever if the DB is unreachable.
   connectionTimeoutMillis: 5000,
   // On Vercel every function instance has its own small pool (use the

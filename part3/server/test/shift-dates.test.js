@@ -4,7 +4,9 @@
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { pool } from '../src/db.js';
+// As the database owner: the script moves dates and replaces nyc_now(),
+// which the app's role (soccer_app) may not do.
+import { ownerPool as pool } from './owner-db.js';
 
 after(() => pool.end());
 

@@ -10,7 +10,9 @@
 //   const res = await grace.get('/player/games');
 //   await server.stop();                      // in after()
 import { app } from '../src/app.js';
-import { pool, query } from '../src/db.js';
+import { pool } from '../src/db.js';
+// Fixtures run as the database owner; the app runs as soccer_app.
+import { ownerPool, query } from './owner-db.js';
 
 if (!/nyc_fields_test/.test(process.env.DATABASE_URL ?? '')) {
   throw new Error('Run the tests with `npm test` (it points DATABASE_URL at nyc_fields_test).');
@@ -87,7 +89,7 @@ export async function startTestServer() {
     client: () => new Client(baseUrl),
     stop: async () => {
       await new Promise((resolve) => server.close(resolve));
-      await pool.end();
+      await Promise.all([pool.end(), ownerPool.end()]);
     },
   };
 }

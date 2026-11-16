@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# Rebuild the Part 3 database from scratch: tables (schema.sql), sample
-# data (seed.sql), then the real NYC soccer fields from NYC Open Data
+# Rebuild the Part 3 database from scratch: tables and the GameState view
+# (schema.sql), database roles and privileges (roles.sql), sample data
+# (seed.sql), then the real NYC soccer fields from NYC Open Data
 # (open_data_fields.sql). Creates the local database first if it is missing.
+# Run it as the database owner (locally: your own user; on Neon: the
+# owner's unpooled URL), never as the app's login role.
 #
 #   ./reset.sh                    # uses the local database nyc_fields
 #   PGDATABASE=other ./reset.sh   # or any other local database name
@@ -38,6 +41,8 @@ SQL
 fi
 
 psql -v ON_ERROR_STOP=1 -q -d "$TARGET" -f schema.sql
+# Database roles and their privileges (dropping the tables dropped them).
+psql -v ON_ERROR_STOP=1 -q -d "$TARGET" -f roles.sql
 psql -v ON_ERROR_STOP=1 -q -d "$TARGET" -f seed.sql >/dev/null
 if [ "${OPEN_DATA_FIELDS:-1}" != "0" ]; then
     psql -v ON_ERROR_STOP=1 -q -d "$TARGET" -f open_data_fields.sql >/dev/null
@@ -45,4 +50,4 @@ fi
 if [ "${SHIFT_DATES:-1}" != "0" ]; then
     psql -v ON_ERROR_STOP=1 -q -tA -d "$TARGET" -f shift_dates.sql
 fi
-echo "Rebuilt $LABEL: schema.sql + seed.sql$([ "${OPEN_DATA_FIELDS:-1}" != "0" ] && echo ' + open_data_fields.sql')"
+echo "Rebuilt $LABEL: schema.sql + roles.sql + seed.sql$([ "${OPEN_DATA_FIELDS:-1}" != "0" ] && echo ' + open_data_fields.sql')"
