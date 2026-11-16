@@ -18,6 +18,12 @@ import Logout from './pages/public/Logout.jsx';
 import PlayerHome from './pages/player/PlayerHome.jsx';
 import OrganizerHome from './pages/organizer/OrganizerHome.jsx';
 import AdminHome from './pages/admin/AdminHome.jsx';
+// Field finder (Abhinav): the map page is lazy-loaded so MapLibre stays
+// out of the main bundle.
+import { lazy, Suspense } from 'react';
+import SiteFooter from './components/v2/SiteFooter.jsx';
+import FieldPage from './pages/public/FieldPage.jsx';
+const FieldMap = lazy(() => import('./pages/public/FieldMap.jsx'));
 
 const PLAYERS = ['player', 'organizer']; // organizers can play too
 const ORGANIZERS = ['organizer'];
@@ -63,9 +69,14 @@ export default function App() {
           <Route path="/admin/games" element={guard(ADMINS, <ComingSoon title="All games" />)} />
           <Route path="/admin/reports" element={guard(ADMINS, <ComingSoon title="Reports" />)} />
 
+          {/* Field finder (Abhinav) */}
+          <Route path="/map" element={<Suspense fallback={<p className="muted">Loading the field map…</p>}><FieldMap /></Suspense>} />
+          <Route path="/fields/:id" element={<FieldPage />} />
+
           <Route path="*" element={<ComingSoon title="Page not found" text="There is no page at this address." />} />
         </Routes>
       </main>
+      <SiteFooter />
     </>
   );
 }

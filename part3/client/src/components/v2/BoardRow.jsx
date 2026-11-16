@@ -69,6 +69,10 @@ export function SpotsWord({ game, size = 'md' }) {
   );
 }
 
+function RowLink({ component: L, href, ...rest }) {
+  return L ? <L to={href} {...rest} /> : <a href={href} {...rest} />;
+}
+
 function titleCase(text) {
   return String(text).replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -78,6 +82,7 @@ function titleCase(text) {
  * field name, a chevron at the end); the action (Join, Leave, Rate) sits
  * above that link.
  * stackAction: on narrow boards the action gets its own line (long text).
+ * linkComponent: a router Link (gets `to`) instead of a plain <a href>.
  */
 export default function BoardRow({
   game,
@@ -86,6 +91,7 @@ export default function BoardRow({
   action,
   href = `#/games/${game.game_id}`,
   stackAction = false,
+  linkComponent,
   className,
   as: Tag = 'li',
   ...rest
@@ -140,7 +146,8 @@ export default function BoardRow({
         <FieldPhoto photo={photo} credit="none" className={cn('flex-none rounded-[8px]', big ? 'h-16 w-24' : 'h-11 w-16')} />
         <div className="min-w-0">
           {href ? (
-            <a
+            <RowLink
+              component={linkComponent}
               href={href}
               className={cn(
                 'row-link line-clamp-2 font-display font-semibold text-flap-foreground outline-none after:absolute after:inset-0 after:rounded-[16px] after:content-[""] group-hover/row:underline',
@@ -151,7 +158,7 @@ export default function BoardRow({
                 Game #{game.game_id}, {when}, at{' '}
               </span>
               {game.field_name}
-            </a>
+            </RowLink>
           ) : (
             <span className={cn('line-clamp-2 font-display font-semibold text-flap-foreground', big ? 'text-[22px] leading-tight sm:text-[26px]' : 'text-[16px] leading-snug')}>
               {game.field_name}

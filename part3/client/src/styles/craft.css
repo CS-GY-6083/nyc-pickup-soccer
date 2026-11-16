@@ -169,6 +169,49 @@
   .skyline .sl-landmark.is-active :is(.sl-back, .sl-mid, .sl-front) { stroke: var(--accent); stroke-opacity: 1; }
   @media (prefers-reduced-motion: reduce) { .skyline .sl-landmark { transition: none; } }
 
+  /* App shell: room for the mobile tab bar under the page. */
+  @media (width < 64rem) {
+    body:has([data-tabbar]) { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+  }
+
+  /* Field map pins (HTML markers: real buttons with names). */
+  .map-pin, .map-cluster {
+    position: relative; display: grid; place-items: center; cursor: pointer;
+    border: 0; padding: 0; background: none;
+    transition: transform 150ms ease-out;
+  }
+  .map-pin { width: 44px; height: 44px; }
+  .map-pin-body {
+    display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px;
+    background: var(--pin); color: var(--borough-text);
+    font: 800 10px/1 var(--font-display, sans-serif); letter-spacing: 0.02em;
+    box-shadow: 0 0 0 2px var(--surface), 0 4px 10px -4px oklch(from var(--p-ink-900) l c h / 0.5);
+  }
+  .map-pin-badge {
+    position: absolute; top: 2px; right: 1px; min-width: 18px; height: 18px; padding: 0 4px;
+    display: grid; place-items: center; border-radius: 999px;
+    background: var(--surface); color: var(--text); font: 700 11px/1 var(--font-sans, sans-serif);
+    font-variant-numeric: tabular-nums; box-shadow: 0 0 0 1px var(--line-strong);
+  }
+  .map-pin[data-hover] { transform: scale(1.18); z-index: 2; }
+  .map-pin[data-selected] { transform: scale(1.22); z-index: 3; }
+  .map-pin[data-selected] .map-pin-body { box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px var(--accent); }
+  .map-pin:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 999px; }
+  .map-pin.is-static { cursor: default; }
+  .map-cluster {
+    min-width: 40px; height: 40px; padding: 0 10px; border-radius: 999px;
+    background: var(--sign); color: var(--sign-text);
+    font: 700 14px/1 var(--font-sans, sans-serif); font-variant-numeric: tabular-nums;
+    box-shadow: 0 0 0 3px var(--surface), 0 6px 14px -6px oklch(from var(--p-ink-900) l c h / 0.55);
+  }
+  .map-cluster[data-hover], .map-cluster[data-selected] { box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--accent); }
+  .map-cluster:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+  .map-me {
+    display: block; width: 16px; height: 16px; border-radius: 999px;
+    background: var(--info); box-shadow: 0 0 0 3px var(--surface), 0 0 0 9px oklch(from var(--info) l c h / 0.22);
+  }
+  @media (prefers-reduced-motion: reduce) { .map-pin, .map-cluster { transition: none; } }
+
   /* Live dot: pulsing ring for games in play. */
   .live-dot { position: relative; display: inline-block; width: 0.5rem; height: 0.5rem; flex: none; border-radius: var(--r-pill); background: var(--flap-go); }
   .live-dot::after {

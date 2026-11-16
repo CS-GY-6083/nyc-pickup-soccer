@@ -2,6 +2,7 @@
 // Look up by game number, or by field + date.
 // Owner: Abhinav
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { api } from '../../api.js';
 import GameTable from '../../components/GameTable.jsx';
 import { Message } from '../../components/Flash.jsx';
@@ -24,14 +25,27 @@ export default function GameStatus() {
       .catch((err) => setError(err.message));
   }, []);
 
-  async function lookUp(event) {
+  // /status?gameId=12 (e.g. from a field page) looks that game up right away.
+  const [searchParams] = useSearchParams();
+  const linkedGameId = searchParams.get('gameId');
+  useEffect(() => {
+    if (!linkedGameId) return;
+    setMode('game');
+    setGameId(linkedGameId);
+    runLookup({ gameId: linkedGameId });
+  }, [linkedGameId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function lookUp(event) {
     event.preventDefault();
+    runLookup(mode === 'game' ? { gameId } : { fieldId, date });
+  }
+
+  async function runLookup(params) {
     const requestId = ++latestRequest.current;
     setError('');
     setGames(null);
     setBusy(true);
     try {
-      const params = mode === 'game' ? { gameId } : { fieldId, date };
       const data = await api('/public/status', { params });
       if (requestId === latestRequest.current) setGames(data.games);
     } catch (err) {
