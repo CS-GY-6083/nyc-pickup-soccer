@@ -24,6 +24,7 @@ const CONSTRAINT_MESSAGES = {
   chk_game_max_players: 'Max players must fit two full teams for the format, and be at most 30.',
   chk_closure_order: 'The closure must end after it starts.',
   chk_hours_order: 'Closing time must be after opening time.',
+  chk_field_in_nyc: 'Field coordinates must be inside New York City (latitude 40.49 to 40.92, longitude -74.27 to -73.68).',
   chk_rating_range: 'A rating must be between 1 and 5 stars.',
   chk_rating_eligible: 'You can only rate games you played that have finished.',
 };

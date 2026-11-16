@@ -1,25 +1,46 @@
 // Public information: anyone can use these, logged in or not.
 // Owner: Abhinav
 //
-//   GET /api/public/fields           all fields (for search dropdowns)
+//   GET /api/public/fields           field finder / map: every field, or filtered,
+//                                    with game counts and distance  (also the dropdowns)
+//   GET /api/public/fields/:id       one field: hours, closures, upcoming games
 //   GET /api/public/games            search upcoming games      (spec: search future flights)
 //   GET /api/public/status           game status lookup         (spec: flight status)
 import { Router } from 'express';
 import { query } from '../db.js';
 import { HttpError } from '../lib/errors.js';
-import { Where, gameListSql, gameSearchFilters } from '../lib/games.js';
-import { optionalId, requireDate } from '../lib/validate.js';
+import { FIELD_CLOSURES_SQL, FIELD_DETAIL_SQL, fieldFinderQuery } from '../lib/fields.js';
+import { UPCOMING, Where, gameListSql, gameSearchFilters } from '../lib/games.js';
+import { optionalId, requireDate, requireId } from '../lib/validate.js';
 
 const router = Router();
 
-// GET /api/public/fields
+// GET /api/public/fields?borough=Brooklyn,Queens&surface=&format=&skill=
+//                        &from=&to=&open=1&near=40.7206,-73.9513&radiusKm=5
+//                        &sort=distance|games|soonest|name
+// With no parameters: every field, A-Z. See lib/fields.js for the query.
+// The near point is used only in this query; it is never stored or logged.
 router.get('/fields', async (req, res) => {
-  const { rows } = await query(
-    `SELECT field_id, name, borough, location, surface_type
-     FROM Field
-     ORDER BY borough, name`,
-  );
+  const { sql, params } = fieldFinderQuery(req.query);
+  const { rows } = await query(sql, params);
   res.json({ fields: rows });
+});
+
+// GET /api/public/fields/6
+// The field with its coordinates, weekly opening hours, closures that
+// have not ended yet, and its upcoming games (soonest first).
+router.get('/fields/:id', async (req, res) => {
+  const id = requireId(req.params.id, 'Field');
+  const { rows } = await query(FIELD_DETAIL_SQL, [id]);
+  if (rows.length === 0) throw new HttpError(404, 'That field does not exist.');
+  const { hours, ...field } = rows[0];
+
+  const games = new Where().raw(UPCOMING).add('f.field_id = ?', id);
+  const [closures, upcoming] = await Promise.all([
+    query(FIELD_CLOSURES_SQL, [id]),
+    query(gameListSql(games), games.params),
+  ]);
+  res.json({ field, hours, closures: closures.rows, games: upcoming.rows });
 });
 
 // GET /api/public/games?borough=&q=&fieldId=&from=&to=&format=&skill=

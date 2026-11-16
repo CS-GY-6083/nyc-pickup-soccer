@@ -1,8 +1,8 @@
 {
   "1": {
     "park": "Randall's Island Park",
-    "lat": 40.7932,
-    "lng": -73.9214,
+    "lat": 40.79423,
+    "lng": -73.92434,
     "photo": {
       "small": "/photos/fields/1-480.webp",
       "large": "/photos/fields/1-1280.webp",
@@ -18,8 +18,8 @@
   },
   "2": {
     "park": "Central Park, North Meadow",
-    "lat": 40.7955,
-    "lng": -73.956,
+    "lat": 40.79286,
+    "lng": -73.95616,
     "photo": {
       "small": "/photos/fields/2-480.webp",
       "large": "/photos/fields/2-1280.webp",
@@ -35,8 +35,8 @@
   },
   "3": {
     "park": "Thomas Jefferson Park",
-    "lat": 40.7934,
-    "lng": -73.9357,
+    "lat": 40.79402,
+    "lng": -73.93578,
     "photo": {
       "small": "/photos/fields/3-480.webp",
       "large": "/photos/fields/3-1280.webp",
@@ -52,8 +52,8 @@
   },
   "4": {
     "park": "Prospect Park Parade Ground",
-    "lat": 40.651,
-    "lng": -73.9677,
+    "lat": 40.65215,
+    "lng": -73.96709,
     "photo": {
       "small": "/photos/fields/4-480.webp",
       "large": "/photos/fields/4-1280.webp",
@@ -69,8 +69,8 @@
   },
   "5": {
     "park": "Red Hook Recreation Area",
-    "lat": 40.6727,
-    "lng": -74.006,
+    "lat": 40.67306,
+    "lng": -74.00568,
     "photo": {
       "small": "/photos/fields/5-480.webp",
       "large": "/photos/fields/5-1280.webp",
@@ -86,8 +86,8 @@
   },
   "6": {
     "park": "McCarren Park",
-    "lat": 40.7206,
-    "lng": -73.9513,
+    "lat": 40.72,
+    "lng": -73.95127,
     "photo": {
       "small": "/photos/fields/6-480.webp",
       "large": "/photos/fields/6-1280.webp",
@@ -104,8 +104,8 @@
   },
   "7": {
     "park": "Flushing Meadows Corona Park",
-    "lat": 40.7402,
-    "lng": -73.8408,
+    "lat": 40.73804,
+    "lng": -73.84612,
     "photo": {
       "small": "/photos/fields/7-480.webp",
       "large": "/photos/fields/7-1280.webp",
@@ -121,8 +121,8 @@
   },
   "8": {
     "park": "Juniper Valley Park",
-    "lat": 40.721,
-    "lng": -73.878,
+    "lat": 40.71989,
+    "lng": -73.88427,
     "photo": {
       "small": "/photos/fields/8-480.webp",
       "large": "/photos/fields/8-1280.webp",
@@ -138,8 +138,8 @@
   },
   "9": {
     "park": "Van Cortlandt Park",
-    "lat": 40.889,
-    "lng": -73.896,
+    "lat": 40.89468,
+    "lng": -73.89563,
     "photo": {
       "small": "/photos/fields/9-480.webp",
       "large": "/photos/fields/9-1280.webp",
@@ -155,8 +155,8 @@
   },
   "10": {
     "park": "Macombs Dam Park",
-    "lat": 40.827,
-    "lng": -73.93,
+    "lat": 40.82802,
+    "lng": -73.92903,
     "photo": {
       "small": "/photos/fields/10-480.webp",
       "large": "/photos/fields/10-1280.webp",
@@ -172,8 +172,8 @@
   },
   "11": {
     "park": "Pelham Bay Park",
-    "lat": 40.867,
-    "lng": -73.81,
+    "lat": 40.85156,
+    "lng": -73.81965,
     "photo": {
       "small": "/photos/fields/11-480.webp",
       "large": "/photos/fields/11-1280.webp",
@@ -190,8 +190,8 @@
   },
   "12": {
     "park": "Clove Lakes Park",
-    "lat": 40.619,
-    "lng": -74.11,
+    "lat": 40.61674,
+    "lng": -74.10589,
     "photo": {
       "small": "/photos/fields/12-480.webp",
       "large": "/photos/fields/12-1280.webp",

@@ -28,6 +28,7 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
 | P3 | Register as player or organizer | Register (2 types) | Done |
 | P4 | Login (email + password, checked with md5) and session | Login | Done |
 | P5 | Logout, then goodbye page | Logout | Done |
+| P6–7 | Field finder / map: every field with its upcoming and open game counts; filters (boroughs, surface, format, level, dates, open spots); "near me" distance and radius (haversine in SQL); sorting. Field page: hours, closures, upcoming games | Extra (not in the spec) | API done; map and field pages in progress |
 
 ### Player (Devash)
 | # | Use case | Course equivalent |
@@ -64,7 +65,7 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
   - Organizer queries always filter `g.organizer_id = req.user.id`; another organizer's game id gives 404.
   - Player actions only touch `user_id = req.user.id`.
   - Organizers can use all four player pages, since they also play.
-- **Tests:** `npm test` in `server/` (77 tests so far: login, sessions, role guards, search, status, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
+- **Tests:** `npm test` in `server/` (103 tests so far: login, sessions, role guards, search, status, the field finder and field page, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
 - Docs: each owner writes their own section of `USE_CASES.md`.
 
 ## Timeline

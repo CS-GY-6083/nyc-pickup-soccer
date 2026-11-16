@@ -6,8 +6,8 @@
 -- Run after schema.sql (./reset.sh runs both):
 --     psql -d nyc_fields -f seed.sql
 --
--- This is the Part 2 data (part2/insert_data.sql) unchanged, plus
--- sample GameRating rows (Part 3) near the end.
+-- This is the Part 2 data (part2/insert_data.sql), plus for Part 3:
+-- each field's latitude/longitude, and sample GameRating rows near the end.
 --
 -- Contents
 --   24 users: 2 admins, 5 organizers, 17 players
@@ -21,7 +21,10 @@
 -- Dates are relative to 2026-11-09.
 --
 -- Field names, addresses and surfaces are hand-entered approximations
--- of NYC Parks facilities. People and games are made up.
+-- of NYC Parks facilities. Coordinates (5 decimals, about 1 m) are a
+-- playing field inside that park as mapped on OpenStreetMap: a soccer
+-- pitch for fields 1-10, the ball field nearest the address for 11-12.
+-- People and games are made up.
 --
 -- The script is re-runnable: it empties all tables first.
 -- IDs are given explicitly so foreign keys are easy to follow; the
@@ -68,19 +71,19 @@ INSERT INTO Users (user_id, name, email, password_hash, role) VALUES
 -- ---------------------------------------------------------------------
 -- Field
 -- ---------------------------------------------------------------------
-INSERT INTO Field (field_id, name, borough, location, surface_type) VALUES
-    ( 1, 'Randall''s Island Field 10',             'Manhattan',     'Randall''s Island Park, New York, NY 10035',                  'Synthetic Turf'),
-    ( 2, 'Central Park North Meadow Field 5',      'Manhattan',     'North Meadow, Central Park (E 97th St Transverse)',           'Natural Grass'),
-    ( 3, 'Thomas Jefferson Park Soccer Field',     'Manhattan',     'Thomas Jefferson Park, E 112th St & 1st Ave',                 'Synthetic Turf'),
-    ( 4, 'Parade Ground Field 3',                  'Brooklyn',      'Prospect Park Parade Ground, Caton Ave & Coney Island Ave',   'Synthetic Turf'),
-    ( 5, 'Red Hook Recreation Area Field 7',       'Brooklyn',      'Red Hook Recreation Area, Bay St & Henry St',                 'Synthetic Turf'),
-    ( 6, 'McCarren Park Soccer Field',             'Brooklyn',      'McCarren Park, Bedford Ave & N 12th St',                      'Synthetic Turf'),
-    ( 7, 'Flushing Meadows Corona Park Field 4',   'Queens',        'Flushing Meadows Corona Park, near Meadow Lake',              'Natural Grass'),
-    ( 8, 'Juniper Valley Park Field 2',            'Queens',        'Juniper Valley Park, Juniper Blvd N & 80th St',               'Synthetic Turf'),
-    ( 9, 'Van Cortlandt Park Parade Ground 1',     'Bronx',         'Van Cortlandt Park, Broadway & W 242nd St',                   'Natural Grass'),
-    (10, 'Macombs Dam Park Soccer Field',          'Bronx',         'Macombs Dam Park, E 161st St & Jerome Ave',                   'Synthetic Turf'),
-    (11, 'Pelham Bay Park Field 3',                'Bronx',         'Pelham Bay Park, Bruckner Blvd & Middletown Rd',              'Natural Grass'),
-    (12, 'Clove Lakes Park Field 1',               'Staten Island', 'Clove Lakes Park, Victory Blvd & Clove Rd',                   'Natural Grass');
+INSERT INTO Field (field_id, name, borough, location, surface_type, latitude, longitude) VALUES
+    ( 1, 'Randall''s Island Field 10',            'Manhattan',     'Randall''s Island Park, New York, NY 10035',                  'Synthetic Turf', 40.79423, -73.92434),
+    ( 2, 'Central Park North Meadow Field 5',     'Manhattan',     'North Meadow, Central Park (E 97th St Transverse)',           'Natural Grass',  40.79286, -73.95616),
+    ( 3, 'Thomas Jefferson Park Soccer Field',    'Manhattan',     'Thomas Jefferson Park, E 112th St & 1st Ave',                 'Synthetic Turf', 40.79402, -73.93578),
+    ( 4, 'Parade Ground Field 3',                 'Brooklyn',      'Prospect Park Parade Ground, Caton Ave & Coney Island Ave',   'Synthetic Turf', 40.65215, -73.96709),
+    ( 5, 'Red Hook Recreation Area Field 7',      'Brooklyn',      'Red Hook Recreation Area, Bay St & Henry St',                 'Synthetic Turf', 40.67306, -74.00568),
+    ( 6, 'McCarren Park Soccer Field',            'Brooklyn',      'McCarren Park, Bedford Ave & N 12th St',                      'Synthetic Turf', 40.72000, -73.95127),
+    ( 7, 'Flushing Meadows Corona Park Field 4',  'Queens',        'Flushing Meadows Corona Park, near Meadow Lake',              'Natural Grass',  40.73804, -73.84612),
+    ( 8, 'Juniper Valley Park Field 2',           'Queens',        'Juniper Valley Park, Juniper Blvd N & 80th St',               'Synthetic Turf', 40.71989, -73.88427),
+    ( 9, 'Van Cortlandt Park Parade Ground 1',    'Bronx',         'Van Cortlandt Park, Broadway & W 242nd St',                   'Natural Grass',  40.89468, -73.89563),
+    (10, 'Macombs Dam Park Soccer Field',         'Bronx',         'Macombs Dam Park, E 161st St & Jerome Ave',                   'Synthetic Turf', 40.82802, -73.92903),
+    (11, 'Pelham Bay Park Field 3',               'Bronx',         'Pelham Bay Park, Bruckner Blvd & Middletown Rd',              'Natural Grass',  40.85156, -73.81965),
+    (12, 'Clove Lakes Park Field 1',              'Staten Island', 'Clove Lakes Park, Victory Blvd & Clove Rd',                   'Natural Grass',  40.61674, -74.10589);
 
 -- ---------------------------------------------------------------------
 -- FieldOperatingHours  (day_of_week: 0 = Sunday ... 6 = Saturday)

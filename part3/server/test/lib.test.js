@@ -110,6 +110,19 @@ describe('Where builder', () => {
   test('add() refuses an undefined value (usually a typo in the caller)', () => {
     assert.throws(() => new Where().add('a = ?', undefined), /undefined/);
   });
+  test('value() returns the next placeholder for a value used outside WHERE', () => {
+    const where = new Where().add('a = ?', 1);
+    assert.equal(where.value(40.7), '$2');
+    assert.equal(where.add('b = ?', 2).toSql(), '(a = $1)\n  AND (b = $3)');
+    assert.deepEqual(where.params, [1, 40.7, 2]);
+  });
+  test('two Wheres sharing one params array continue the numbering', () => {
+    const inner = new Where().add('g.format = ?', '5v5');
+    const outer = new Where(inner.params).add('f.borough = ?', 'Bronx');
+    assert.equal(inner.toSql(), '(g.format = $1)');
+    assert.equal(outer.toSql(), '(f.borough = $2)');
+    assert.deepEqual(outer.params, ['5v5', 'Bronx']);
+  });
 });
 
 describe('gameListSql', () => {

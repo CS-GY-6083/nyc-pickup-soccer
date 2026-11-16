@@ -18,17 +18,32 @@ import {
  * each in parentheses, so an OR inside one condition stays inside it.
  */
 export class Where {
-  constructor() {
+  /**
+   * `params` is normally left out. Pass another Where's params array when
+   * one query has two WHERE clauses (e.g. one inside a WITH and one in
+   * the main SELECT): both then share one array, so the $n numbers
+   * continue instead of starting again at $1.
+   */
+  constructor(params = []) {
     this.conditions = [];
-    this.params = [];
+    this.params = params;
   }
 
   /** Add a condition with one value. Every ? in it refers to that value. */
   add(condition, value) {
     if (value === undefined) throw new Error(`Where.add('${condition}'): value is undefined`);
-    this.params.push(value);
-    this.conditions.push(condition.replaceAll('?', `$${this.params.length}`));
+    this.conditions.push(condition.replaceAll('?', this.value(value)));
     return this;
+  }
+
+  /**
+   * Add a value that is used somewhere other than a condition (e.g. in
+   * the SELECT list) and return its placeholder, like '$3'.
+   */
+  value(value) {
+    if (value === undefined) throw new Error('Where.value(): value is undefined');
+    this.params.push(value);
+    return `$${this.params.length}`;
   }
 
   /** Add a condition that has no user-supplied value. */
@@ -42,8 +57,9 @@ export class Where {
   }
 }
 
-// Number of active (not cancelled) sign-ups per game.
-const SIGNUPS_CTE = `
+// Number of active (not cancelled) sign-ups per game. Also used by
+// the field finder (lib/fields.js).
+export const SIGNUPS_CTE = `
 signups AS (
     SELECT game_id, COUNT(*) AS signed_up
     FROM GameRegistration
