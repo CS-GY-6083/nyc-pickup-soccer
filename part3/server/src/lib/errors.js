@@ -16,6 +16,7 @@ export class HttpError extends Error {
 const CONSTRAINT_MESSAGES = {
   uq_users_email: 'An account with this email already exists.',
   chk_users_email: 'Please enter a valid email address.',
+  uq_field_name: 'A field with this name already exists.',
   excl_reservation_no_overlap: 'That field already has an approved game at an overlapping time.',
   chk_reservation_future: 'A game must be booked before it starts.',
   chk_reservation_length: 'A game slot must last between 1 and 3 hours.',

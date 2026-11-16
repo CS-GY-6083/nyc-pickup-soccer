@@ -247,6 +247,8 @@ CREATE TABLE GameRegistration (
 -- One account per email address, ignoring capitals:
 -- 'Maria.Lopez@example.com' counts as the same as 'maria.lopez@example.com'.
 CREATE UNIQUE INDEX uq_users_email       ON Users (lower(email));
+-- One field per name, ignoring capitals (admins add fields, A2).
+CREATE UNIQUE INDEX uq_field_name        ON Field (lower(name));
 
 -- Common pickup-game lookups
 CREATE INDEX idx_field_borough_surface   ON Field (borough, surface_type);

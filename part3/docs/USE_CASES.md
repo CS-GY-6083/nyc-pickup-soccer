@@ -55,6 +55,7 @@ g.status = 'scheduled' AND r.status IN ('approved', 'pending') AND r.start_time 
   Otherwise the insert fails with `chk_rating_eligible`, which the app shows as "You can only rate games you played that have finished."
 - **One rating per player per game:** the primary key `(game_id, user_id)`.
 - **Ratings only from people who signed up:** the composite foreign key to `GameRegistration`.
+- **One field per name (`uq_field_name`).** A unique index on `lower(Field.name)`, so "Pier 40 Field 2" and "pier 40 field 2" count as the same field. Adding a duplicate (A2) gives "A field with this name already exists."
 - **Field coordinates inside NYC (`chk_field_in_nyc`).** `Field.latitude` must be 40.49–40.92 and `Field.longitude` −74.27 to −73.68, which catches swapped or mistyped coordinates. Used by the field map (P6).
 
 ## Public (Abhinav)
@@ -194,5 +195,119 @@ _To be added._
 ## Organizer (Jason)
 _To be added._
 
-## Admin (Abhinav, Devash)
+## Admin (Abhinav; reports: Devash)
+
+All admin routes are in `server/src/routes/admin.js`, mounted behind `requireRole('admin')`; the SQL is in `server/src/lib/admin.js`. Tests: `server/test/admin.test.js` (they create their own bookings, fields and closures and delete them afterwards).
+
+### A1. Pending bookings: `GET /api/admin/bookings`
+Part 2 Q2, extended so the admin sees *why* a booking cannot be approved, not just that it can't. One row per pending booking of a game that has not kicked off, oldest request first:
+
+```sql
+SELECT r.reservation_id, g.game_id, ..., f.name AS field_name, o.name AS organizer_name,
+       ov.game_id     AS overlap_game_id,   -- the approved game in the way
+       cl.reason      AS closure_reason,    -- the closure in the way
+       NOT EXISTS (SELECT 1 FROM FieldOperatingHours h
+                   WHERE h.field_id = r.field_id
+                     AND h.day_of_week = EXTRACT(DOW FROM r.start_time)
+                     AND r.start_time::time >= h.open_time
+                     AND r.end_time::time  <= h.close_time) AS outside_hours,
+       (SELECT COUNT(*) FROM Reservation p          -- other pending requests for an overlapping slot
+        WHERE p.field_id = r.field_id AND p.status = 'pending' AND p.reservation_id <> r.reservation_id
+          AND p.start_time > nyc_now() AND p.start_time < r.end_time AND r.start_time < p.end_time) AS competing_requests,
+       CASE WHEN ov.reservation_id IS NOT NULL THEN 'overlaps an approved game'
+            WHEN cl.closure_id IS NOT NULL     THEN 'field closed'
+            WHEN NOT EXISTS (...same hours check...) THEN 'outside field hours'
+            ELSE 'none' END AS conflict           -- exactly Q2's CASE
+FROM PickupGame g
+JOIN Reservation r ON r.reservation_id = g.reservation_id
+JOIN Field f ON f.field_id = r.field_id
+JOIN Users o ON o.user_id = g.organizer_id
+LEFT JOIN LATERAL (SELECT a.reservation_id, ag.game_id, a.start_time, a.end_time
+                   FROM Reservation a LEFT JOIN PickupGame ag ON ag.reservation_id = a.reservation_id
+                   WHERE a.field_id = r.field_id AND a.status = 'approved'
+                     AND a.start_time < r.end_time AND r.start_time < a.end_time
+                   ORDER BY a.start_time LIMIT 1) ov ON TRUE
+LEFT JOIN LATERAL (SELECT c.closure_id, c.reason, c.start_time, c.end_time
+                   FROM FieldClosure c
+                   WHERE c.field_id = r.field_id
+                     AND c.start_time < r.end_time AND r.start_time < c.end_time
+                   ORDER BY c.start_time LIMIT 1) cl ON TRUE
+LEFT JOIN FieldOperatingHours h ON h.field_id = r.field_id AND h.day_of_week = EXTRACT(DOW FROM r.start_time)
+WHERE r.status = 'pending' AND g.status = 'scheduled' AND r.start_time > nyc_now()
+ORDER BY r.requested_at, r.reservation_id;
+```
+
+- **Overlap test.** Two time ranges overlap when each one starts before the other ends (`a.start < b.end AND b.start < a.end`); back-to-back games (one ends at 11:00, the next starts at 11:00) do not overlap, the same rule as the exclusion constraint's half-open `tsrange`.
+- **`LEFT JOIN LATERAL`** runs the subquery once per booking and can return that booking's first overlapping approved game or closure, so the page can say "Overlaps game #16, approved for 4:00–6:00 PM" instead of only "conflict".
+
+### A1. Approve: `POST /api/admin/bookings/:id/approve`
+One transaction (`withTransaction`):
+1. Lock the booking and read what the rules need:
+   ```sql
+   SELECT r.status, r.start_time <= nyc_now() AS kicked_off,
+          f.name AS field_name, cl.reason AS closure_reason, NOT EXISTS (...hours...) AS outside_hours
+   FROM Reservation r JOIN Field f ON f.field_id = r.field_id
+   LEFT JOIN LATERAL (...first overlapping closure...) cl ON TRUE
+   WHERE r.reservation_id = $1
+   FOR UPDATE OF r;
+
+   SELECT game_id, status FROM PickupGame WHERE reservation_id = $1 FOR UPDATE;
+   ```
+   `FOR UPDATE OF r` locks the booking row: a second admin reviewing the same booking waits, then sees it is no longer pending (409). The game row is locked next, so an organizer cancelling the game at the same moment cannot slip in between the check and the approval. **Lock order:** every transaction that touches both locks the booking first, then its game (organizer cancel, O3, must do the same), so two transactions can never wait on each other in a circle.
+2. Refuse with 409 and a specific message when: it is not pending, kick-off has passed, the game was called off, the field is closed then, or it is outside opening hours. No constraint can check closures or hours (they span tables), so the code does.
+3. ```sql
+   UPDATE Reservation SET status = 'approved', reviewed_by = $2, reviewed_at = nyc_now()
+   WHERE reservation_id = $1 AND status = 'pending';
+   ```
+   If another approved booking overlaps, the exclusion constraint `excl_reservation_no_overlap` refuses the UPDATE (Part 2 Q10). The error handler turns that into 409 "That field already has an approved game at an overlapping time." Two admins approving two overlapping bookings at the same moment: the second UPDATE waits for the first transaction and then fails, so exactly one wins (tested).
+
+### A1. Reject: `POST /api/admin/bookings/:id/reject` `{ reason }`
+Same lock and "still pending" check, then three statements in the transaction:
+```sql
+UPDATE Reservation SET status = 'rejected', reviewed_by = $2, reviewed_at = nyc_now(), rejection_reason = $3
+WHERE reservation_id = $1 AND status = 'pending';
+UPDATE PickupGame SET status = 'cancelled' WHERE reservation_id = $1 AND status = 'scheduled' RETURNING game_id;
+UPDATE GameRegistration SET registration_status = 'cancelled' WHERE game_id = $1 AND registration_status = 'registered';
+```
+The reason (1–255 characters) is required; `chk_reservation_rejection_reason` also insists on it. The game's status page then shows "Called off" with the reason. After approving or rejecting, the app returns to the admin home page with the server's message, as the spec asks.
+
+### A2. Fields: `GET` / `POST /api/admin/fields`
+`GET` lists every field A–Z with its hours as a JSON array (`json_agg(json_build_object(...) ORDER BY day_of_week)`) and two counts (upcoming games, bookings waiting for review).
+
+`POST { name, borough, location, surfaceType, latitude, longitude, hours: [{ day, open, close }] }` checks every value first (borough and surface from the CHECK lists, coordinates inside NYC, days 0–6 once each, times `HH:MM` with close after open), then in one transaction:
+```sql
+INSERT INTO Field (name, borough, location, surface_type, latitude, longitude)
+VALUES ($1, $2, $3, $4, $5, $6) RETURNING field_id, ...;
+
+INSERT INTO FieldOperatingHours (field_id, day_of_week, open_time, close_time)
+SELECT $1, d.day_of_week, d.open_time::time, d.close_time::time
+FROM unnest($2::smallint[], $3::text[], $4::text[]) AS d(day_of_week, open_time, close_time);
+```
+`unnest` over three arrays inserts all the days in one statement while keeping every value a parameter. If either INSERT fails, neither is kept. The response includes every field, which the page shows as the confirmation list (spec: "a confirmation page with all the airplanes").
+
+### A3. Closures: `GET` / `POST /api/admin/closures`
+`GET` shows closures that have not ended (`?all=1` for every one), each with how many approved, still-scheduled games it overlaps.
+
+`POST { fieldId, start, end, reason }` (times from `<input type="datetime-local">`, New York time) checks that the field exists and the closure ends in the future, inserts it with `created_by = req.user.id`, and returns the scheduled games (approved or pending) it overlaps, using the shared game list:
+```sql
+-- gameListSql(where) with:
+WHERE (g.status = 'scheduled' AND r.status IN ('approved', 'pending'))
+  AND (f.field_id = $1) AND (r.start_time < $2::timestamp) AND ($3::timestamp < r.end_time)
+```
+Approved games are left alone (the admin contacts their organizers); pending ones can no longer be approved because A1 checks closures.
+
+### A4. All games: `GET /api/admin/games`, `GET /api/admin/games/:id/players`
+The shared game list with no "upcoming" condition, so it includes past, cancelled and rejected games, latest kick-off first (`ORDER BY r.start_time DESC`, at most 200). Optional filters, each one `$n` parameter: `gameId`, `fieldId`, `borough`, `q` (field name or address), `from`/`to`, `booking` (`r.status`), `game` (`g.status`). The roster:
+```sql
+SELECT u.user_id, u.name, u.role, x.joined_at, x.registration_status
+FROM GameRegistration x JOIN Users u ON u.user_id = x.user_id
+WHERE x.game_id = $1
+ORDER BY x.registration_status = 'registered' DESC, x.joined_at, u.user_id;
+```
+Rosters show names only, never email addresses.
+
+### Admin home: `GET /api/admin/summary`
+Four counts in one query of scalar subqueries: bookings waiting for review, upcoming games, fields, and closures now or coming up.
+
+### A5. Reports (Devash)
 _To be added._

@@ -28,7 +28,7 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
 | P3 | Register as player or organizer | Register (2 types) | Done |
 | P4 | Login (email + password, checked with md5) and session | Login | Done |
 | P5 | Logout, then goodbye page | Logout | Done |
-| P6–7 | Field finder / map: every field with its upcoming and open game counts; filters (boroughs, surface, format, level, dates, open spots); "near me" distance and radius (haversine in SQL); sorting. Field page: hours, closures, upcoming games | Extra (not in the spec) | API done; map and field pages in progress |
+| P6–7 | Field finder / map: every field with its upcoming and open game counts; filters (boroughs, surface, format, level, dates, open spots); "near me" distance and radius (haversine in SQL); sorting. Field page: hours, closures, upcoming games | Extra (not in the spec) | Done |
 
 ### Player (Devash)
 | # | Use case | Course equivalent |
@@ -51,21 +51,22 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
 | O6 | Reports: sign-ups for last month / last year / date range, monthly bar chart | View reports |
 
 ### Admin (Abhinav; reports: Devash)
-| # | Use case | Course equivalent | Owner |
-|---|---|---|---|
-| A1 | Pending bookings with conflict flags (Part 2 Q2); approve (overlaps refused by the database, Q10; the code also refuses closures and times outside opening hours) or reject with a reason | Staff approval flow | Abhinav |
-| A2 | Add a field and its opening hours; confirmation lists every field | Add airplane | Abhinav |
-| A3 | Add a field closure; warn about approved games it overlaps | Add airport (facility data) | Abhinav |
-| A4 | All games and bookings, with filters and rosters | View flights (all) | Abhinav |
-| A5 | Reports: field usage hours last month / last year; bookings per month; by borough (Q7), by format (Q8); most active players (Q5) | View reports, Earned revenue | Devash |
+| # | Use case | Course equivalent | Owner | Status |
+|---|---|---|---|---|
+| A1 | Pending bookings with conflict flags (Part 2 Q2); approve (overlaps refused by the database, Q10; the code also refuses closures and times outside opening hours) or reject with a reason | Staff approval flow | Abhinav | Done |
+| A2 | Add a field and its opening hours; confirmation lists every field | Add airplane | Abhinav | Done |
+| A3 | Add a field closure; warn about approved games it overlaps | Add airport (facility data) | Abhinav | Done |
+| A4 | All games and bookings, with filters and rosters | View flights (all) | Abhinav | Done |
+| A5 | Reports: field usage hours last month / last year; bookings per month; by borough (Q7), by format (Q8); most active players (Q5) | View reports, Earned revenue | Devash | |
 
 ### Shared
 - Infrastructure (repo, DB scripts, Express skeleton, sessions, auth middleware, shared components, test setup, date-shift script): Abhinav (done in M0).
+- **Shared UI for every page (Abhinav):** `client/src/components/v2/` holds the design system. For a new page, wrap it in `<Page title="…" lede="…">` and use `TextField`, `SelectField`, `TextArea`, `Segmented`, `Notice`, `EmptyState`, `Skeleton` and `Button` (`to="/path"` for in-app links) from `components/v2/index.js`; game lists can use `Board` + `BoardRow` (with `linkComponent={Link}`). `Message`, `useGoHome`, `UseCaseMenu` and `ComingSoon` keep their old props. Examples: `pages/admin/*.jsx`, `pages/public/GameStatus.jsx`.
 - **Rules for every new endpoint:**
   - Organizer queries always filter `g.organizer_id = req.user.id`; another organizer's game id gives 404.
   - Player actions only touch `user_id = req.user.id`.
   - Organizers can use all four player pages, since they also play.
-- **Tests:** `npm test` in `server/` (103 tests so far: login, sessions, role guards, search, status, the field finder and field page, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
+- **Tests:** `npm test` in `server/` (133 tests so far: login, sessions, role guards, search, status, the field finder and field page, the admin use cases A1–A4, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
 - Docs: each owner writes their own section of `USE_CASES.md`.
 
 ## Timeline

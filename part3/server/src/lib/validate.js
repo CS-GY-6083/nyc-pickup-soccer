@@ -85,3 +85,55 @@ export function checkDateOrder(from, to) {
 export function containsPattern(text) {
   return `%${text.replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`;
 }
+
+/** One of a fixed list of values; required. */
+export function requireChoice(value, label, choices) {
+  const choice = optionalChoice(value, label, choices);
+  if (choice === null) throw new HttpError(400, `${label} is required.`);
+  return choice;
+}
+
+/**
+ * A number (from JSON, or text like "40.72" from a form), optionally
+ * within [min, max]. Text such as "1e3", "0x10" or "12abc" is refused.
+ */
+export function requireNumber(value, label, { min, max } = {}) {
+  if (blank(value)) throw new HttpError(400, `${label} is required.`);
+  let number = NaN;
+  if (typeof value === 'number') number = value;
+  else if (typeof value === 'string' && /^\s*-?\d+(\.\d+)?\s*$/.test(value)) number = Number(value);
+  if (!Number.isFinite(number)) throw new HttpError(400, `${label} must be a number.`);
+  if ((min !== undefined && number < min) || (max !== undefined && number > max)) {
+    throw new HttpError(400, `${label} must be between ${min} and ${max}.`);
+  }
+  return number;
+}
+
+/** A 24-hour time 'HH:MM' (00:00 to 23:59). */
+export function requireTime(value, label) {
+  if (blank(value)) throw new HttpError(400, `${label} is required.`);
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(text)) {
+    throw new HttpError(400, `${label} must be a time like 07:00 or 21:30.`);
+  }
+  return text;
+}
+
+/**
+ * A date and time, as sent by <input type="datetime-local">
+ * ('2026-11-21T07:00') or with a space. Returns 'YYYY-MM-DD HH:MM',
+ * which PostgreSQL reads as a TIMESTAMP (New York local time).
+ */
+export function requireDateTime(value, label) {
+  if (blank(value)) throw new HttpError(400, `${label} is required.`);
+  const match = typeof value === 'string' && /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(:00)?$/.exec(value.trim());
+  const bad = () => new HttpError(400, `${label} must be a date and time (YYYY-MM-DD HH:MM).`);
+  if (!match) throw bad();
+  try {
+    optionalDate(match[1], label);
+    requireTime(match[2], label);
+  } catch {
+    throw bad();
+  }
+  return `${match[1]} ${match[2]}`;
+}

@@ -14,6 +14,8 @@
 //                                                  The spec wants this page to also list my games in the next 30 days.
 //   POST   /api/organizer/games/:id/status      3. Change status: 'completed' (after kickoff, booking approved)
 //                                                  or 'cancelled' (also cancel booking + registrations)
+//                                                  Lock order (same as admin approve/reject): lock the Reservation
+//                                                  row FOR UPDATE first, then the PickupGame row.
 //   GET    /api/organizer/ratings               4. Average rating per game + all comments (GameRating)
 //   GET    /api/organizer/frequent-players      5. Top players in my games, last year (Part 2 Q5 with RANK)
 //   GET    /api/organizer/players/:id/games     5. Games one player played in my games
