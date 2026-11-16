@@ -27,6 +27,10 @@ if (isProduction && !process.env.SESSION_SECRET) {
 
 export const app = express();
 app.disable('x-powered-by');
+// Deployed (Vercel), requests arrive through an HTTPS proxy. Trusting its
+// X-Forwarded-Proto header lets express-session see the request as secure
+// and send the Secure session cookie. Locally nothing changes.
+if (isProduction) app.set('trust proxy', 1);
 app.use(express.json({ limit: '100kb' }));
 
 // Sessions are stored in the "session" table (see db/schema.sql). The

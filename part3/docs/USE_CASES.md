@@ -166,6 +166,20 @@ ORDER BY d.km, f.name, f.field_id;
 - **Privacy.** The `near` point is only a query parameter. The server never stores or logs it, and does not send it back.
 - **Coordinates.** `Field.latitude` / `longitude` are `NUMERIC(8,5)`, and the `chk_field_in_nyc` CHECK keeps them inside New York City's bounding box (latitude 40.49–40.92, longitude −74.27 to −73.68). The seed coordinates are the pitches' positions on OpenStreetMap.
 
+### Field data: real NYC soccer fields (NYC Open Data)
+Besides the 12 hand-entered fields in `seed.sql` (ids 1–12, which the sample games use), the database holds every active NYC Parks field marked for soccer: 352 more, loaded from `db/open_data_fields.sql` by `reset.sh`.
+- **Sources:**
+  - NYC Parks *Athletic Facilities* (`qnem-b8re`): sport flags, surface, lighting, field number and outline.
+  - NYC Parks *Properties* (`enfh-gkve`): the park name and location, joined on `gispropnum`.
+- **How the file is made:** `node db/open-data/build_fields.mjs` downloads both datasets and writes the SQL file. The SQL is committed, so a reset works offline. The rules are in `db/open-data/transform.mjs` and tested in `server/test/open-data.test.js`:
+  - only active fields with `regulation_soccer` or `nonregulation_soccer`;
+  - surface Natural → Natural Grass, Synthetic → Synthetic Turf, Asphalt → Asphalt;
+  - the location is the centre of the field's outline;
+  - names are made unique for `uq_field_name`;
+  - fields within 75 m of a hand-entered field are skipped, since they are the same pitch.
+- **Opening hours** are not in the data, so they follow the seed's rules: lit 07:00–22:00 daily; unlit 08:00–17:00 daily; unlit grass closed Mondays. One `INSERT … SELECT` joins each field to its rule and `generate_series(0, 6)` for the days.
+- **Tests:** the test database skips this file (`OPEN_DATA_FIELDS=0` in `npm run test:db`), so the tests run on the 12 seed fields.
+
 ### P7. Field page: `GET /api/public/fields/:id`
 The field with its coordinates and weekly opening hours, as one row. The hours are a JSON array built in SQL:
 ```sql

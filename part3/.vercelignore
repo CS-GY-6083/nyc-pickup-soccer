@@ -1,0 +1,13 @@
+# Not uploaded to Vercel: dependencies and builds are made there,
+# and local secrets never leave this computer.
+node_modules
+**/node_modules
+client/dist
+client/dist-proto
+**/.env
+**/.env.*
+.DS_Store
+test-results
+playwright-report
+design/photos/raw
+design/photos/tiles

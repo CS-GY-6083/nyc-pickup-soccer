@@ -66,8 +66,17 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
   - Organizer queries always filter `g.organizer_id = req.user.id`; another organizer's game id gives 404.
   - Player actions only touch `user_id = req.user.id`.
   - Organizers can use all four player pages, since they also play.
-- **Tests:** `npm test` in `server/` (133 tests so far: login, sessions, role guards, search, status, the field finder and field page, the admin use cases A1–A4, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
+- **Tests:** `npm test` in `server/` (146 tests so far: login, sessions, role guards, search, status, the field finder and field page, the admin use cases A1–A4, the NYC Open Data field import, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
 - Docs: each owner writes their own section of `USE_CASES.md`.
+
+## Hosting (Vercel + Neon)
+- **What runs where:** the site is the Vercel project `nyc-pickup-soccer`. The React build is served as static files, and the Express API runs as one serverless function: `api/index.js` imports `server/src/app.js`, and `vercel.json` routes `/api/*` to it. The database is a free Neon Postgres, connected to the project as `DATABASE_URL`.
+- **Deploy:** from `part3/`, run `vercel deploy --prod`. Git auto-deploy needs Vercel's GitHub app installed on the CS-GY-6083 org (Jason).
+- **Refresh the hosted data** (before screenshots and the demo, as for local):
+  1. `vercel env pull .env.local` in `part3/`.
+  2. `DATABASE_URL="<DATABASE_URL_UNPOOLED from .env.local>" db/reset.sh`.
+
+  Never commit `.env.local`.
 
 ## Timeline
 

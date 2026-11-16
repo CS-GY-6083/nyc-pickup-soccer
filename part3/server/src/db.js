@@ -26,6 +26,9 @@ export const pool = new pg.Pool({
   database: process.env.DATABASE_URL ? undefined : 'nyc_fields',
   // Fail with an error instead of waiting forever if the DB is unreachable.
   connectionTimeoutMillis: 5000,
+  // On Vercel every function instance has its own small pool (use the
+  // database's pooled connection string there); locally the default of 10.
+  max: process.env.VERCEL ? 3 : 10,
 });
 
 // An idle connection can fail (e.g. PostgreSQL restarts, or db/reset.sh

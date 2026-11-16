@@ -8,7 +8,7 @@ import { Link } from 'react-router';
 import { CalendarX2, TriangleAlert } from 'lucide-react';
 import { api } from '../../api.js';
 import {
-  Board, BoardRow, BoroughBullet, Button, CARD, EmptyState, Icon, Notice, Page, SectionHeading, Segmented, SelectField, Skeleton, TextField,
+  FieldOptions, Board, BoardRow, BoroughBullet, Button, CARD, EmptyState, Icon, Notice, Page, SectionHeading, Segmented, SelectField, Skeleton, TextField,
 } from '../../components/v2/index.js';
 import { formatDate, formatTime } from '../../format.js';
 import { fieldPhoto } from '../../lib/fieldPhotos.js';
@@ -56,11 +56,7 @@ function ClosureForm({ fields, onAdded }) {
         {error && <Notice type="error">{error}</Notice>}
         <SelectField label="Field" value={form.fieldId} onChange={set('fieldId')} required>
           <option value="">Choose a field…</option>
-          {fields.map((f) => (
-            <option key={f.field_id} value={f.field_id}>
-              {f.name} ({f.borough})
-            </option>
-          ))}
+          <FieldOptions fields={fields} />
         </SelectField>
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="From" type="datetime-local" value={form.start} onChange={set('start')} required />

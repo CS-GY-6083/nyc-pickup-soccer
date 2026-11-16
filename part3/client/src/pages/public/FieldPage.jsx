@@ -9,7 +9,7 @@ import { api } from '../../api.js';
 import { Board, BoardRow, BoroughBullet, FieldPhoto, Icon, MapLinks, SignBand } from '../../components/v2/index.js';
 import MiniMap from '../../components/v2/map/MiniMap.jsx';
 import { formatDate, formatTime } from '../../format.js';
-import { fieldMeta } from '../../lib/fieldPhotos.js';
+import { fieldMeta, fieldPhoto } from '../../lib/fieldPhotos.js';
 import { summarizeHours, todayHours } from '../../lib/hours.js';
 import { cn } from '../../lib/utils.js';
 
@@ -78,9 +78,10 @@ export default function FieldPage() {
 
   const { field, hours, closures, games } = data;
   const meta = fieldMeta(field.field_id);
-  const photo = meta?.photo ?? null;
+  const photo = fieldPhoto(field.field_id);
   const today = todayHours(hours);
-  const lit = field.surface_type === 'Synthetic Turf';
+  // Lit fields stay open into the evening (see db/seed.sql and the open-data import).
+  const lit = hours.some((h) => h.close >= '21:00');
 
   return (
     <div data-ui className="pb-4 font-sans text-[15px] leading-6 text-foreground">

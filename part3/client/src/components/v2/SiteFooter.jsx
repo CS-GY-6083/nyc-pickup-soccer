@@ -8,8 +8,8 @@ export default function SiteFooter() {
         <Skyline decorative className="aspect-[6/1] w-full max-w-[720px] opacity-80" />
         <div className="mt-5 grid gap-3 text-[13px] leading-5 text-muted-foreground md:grid-cols-2 md:gap-10">
           <p>
-            <span className="font-semibold text-foreground">NYC Pickup Soccer</span> · CS-GY 6083 course project. Fields are
-            approximations of NYC Parks facilities; people and games are made up.
+            <span className="font-semibold text-foreground">NYC Pickup Soccer</span> · CS-GY 6083 course project. Fields: NYC Parks
+            Athletic Facilities via NYC Open Data, plus 12 hand-entered ones; people and games are made up.
           </p>
           <p>
             Field photos: Wikimedia Commons, credited on each photo (stock photos are marked). Map data © OpenStreetMap

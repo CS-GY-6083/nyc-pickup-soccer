@@ -1,0 +1,9 @@
+{
+  "name": "nyc-pickup-soccer",
+  "private": true,
+  "description": "NYC Pickup Soccer System (CS-GY 6083 Part 3). Root manifest for the Vercel deployment only; the app lives in client/ and server/.",
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  }
+}

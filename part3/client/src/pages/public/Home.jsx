@@ -267,6 +267,11 @@ export default function Home() {
   };
 
   const totalUpcoming = fields?.reduce((n, f) => n + f.upcoming_games, 0);
+  // Soonest kick-off first; next_kickoff is 'YYYY-MM-DD HH:MM:SS', so text order is time order.
+  const busyFields = (fields ?? [])
+    .filter((f) => f.upcoming_games > 0)
+    .sort((a, b) => String(a.next_kickoff).localeCompare(String(b.next_kickoff)))
+    .slice(0, 12);
   const [next, ...rest] = games ?? [];
   const rowMotion = (i) =>
     calm
@@ -396,13 +401,21 @@ export default function Home() {
         )}
       </section>
 
-      {/* Fields */}
-      {fields?.length > 0 && (
+      {/* Fields with games coming up (all of them are on the map) */}
+      {busyFields.length > 0 && (
         <section aria-labelledby="pitches" className="mt-14">
-          <SectionHeading id="pitches" aside={<p className="text-[15px] text-muted-foreground">{fields.length} fields in all five boroughs</p>}>
-            Fields
+          <SectionHeading
+            id="pitches"
+            aside={
+              <Link to="/map" className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-accent-ink no-underline hover:underline">
+                <Icon icon={MapIcon} tone="label" size="16px" />
+                See all {fields.length} fields on the map
+              </Link>
+            }
+          >
+            Fields with games coming up
           </SectionHeading>
-          <FieldStrip fields={fields} />
+          <FieldStrip fields={busyFields} />
         </section>
       )}
     </div>

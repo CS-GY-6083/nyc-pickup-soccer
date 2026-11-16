@@ -7,7 +7,7 @@ import { Link, useSearchParams } from 'react-router';
 import { ChevronDown, RotateCcw, Search } from 'lucide-react';
 import { api } from '../../api.js';
 import {
-  BoroughBullet, Button, CARD, EmptyState, Icon, Notice, Page, SelectField, Skeleton, StatusWords, TextField,
+  FieldOptions, BoroughBullet, Button, CARD, EmptyState, Icon, Notice, Page, SelectField, Skeleton, StatusWords, TextField,
 } from '../../components/v2/index.js';
 import { BOROUGHS } from '../../constants.js';
 import { formatDate, formatTime } from '../../format.js';
@@ -184,11 +184,7 @@ export default function AdminGames() {
           </SelectField>
           <SelectField label="Field" value={form.fieldId} onChange={set('fieldId')} className="col-span-2">
             <option value="">Any field</option>
-            {fields.map((f) => (
-              <option key={f.field_id} value={f.field_id}>
-                {f.name}
-              </option>
-            ))}
+            <FieldOptions fields={fields} />
           </SelectField>
           <TextField label="From" type="date" value={form.from} onChange={set('from')} />
           <TextField label="To" type="date" value={form.to} min={form.from || undefined} onChange={set('to')} error={rangeError} />

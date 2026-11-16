@@ -8,7 +8,7 @@ import { Link, useSearchParams } from 'react-router';
 import { ArrowRight, Search } from 'lucide-react';
 import { api } from '../../api.js';
 import {
-  Board, BoardRow, Button, CARD, EmptyState, GAME_STATES, Icon, LABEL, LiveDot, Notice, Page, SectionHeading, Segmented,
+  FieldOptions, Board, BoardRow, Button, CARD, EmptyState, GAME_STATES, Icon, LABEL, LiveDot, Notice, Page, SectionHeading, Segmented,
   SelectField, Skeleton, TextField, gameState,
 } from '../../components/v2/index.js';
 import { formatSlot, todayInNewYork } from '../../format.js';
@@ -174,11 +174,7 @@ export default function GameStatus() {
             <>
               <SelectField label="Field" value={fieldId} onChange={(e) => setFieldId(e.target.value)} className="w-full sm:w-80">
                 <option value="">Choose a field…</option>
-                {fields.map((f) => (
-                  <option key={f.field_id} value={f.field_id}>
-                    {f.name} ({f.borough})
-                  </option>
-                ))}
+                <FieldOptions fields={fields} />
               </SelectField>
               <TextField label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full sm:w-48" />
             </>

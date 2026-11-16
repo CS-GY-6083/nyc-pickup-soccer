@@ -14,6 +14,7 @@ import { ChevronDown, CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'l
 import { cn } from '@/lib/utils.js';
 import Icon from './Icon.jsx';
 import SignBand from './SignBand.jsx';
+import { BOROUGH_NAMES } from './boroughs.js';
 
 export const LABEL = 'text-[13px] font-semibold text-muted-foreground';
 export const CONTROL =
@@ -144,6 +145,27 @@ export function SelectField({ label, hint, error, className, children, id: given
       <Described id={id} hint={hint} error={error} />
     </label>
   );
+}
+
+/**
+ * <option>s for a <select> of fields, grouped by borough (A-Z inside each,
+ * as the API sends them). Put your own first option before it:
+ *   <SelectField label="Field" …><option value="">Choose a field…</option><FieldOptions fields={fields} /></SelectField>
+ */
+export function FieldOptions({ fields }) {
+  return BOROUGH_NAMES.map((borough) => {
+    const list = fields.filter((f) => f.borough === borough);
+    if (list.length === 0) return null;
+    return (
+      <optgroup key={borough} label={`${borough} (${list.length})`}>
+        {list.map((f) => (
+          <option key={f.field_id} value={f.field_id}>
+            {f.name}
+          </option>
+        ))}
+      </optgroup>
+    );
+  });
 }
 
 /** Radio buttons drawn as a segmented control. options: [[value, label], …] */

@@ -4,10 +4,10 @@
 // Owner: Abhinav
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { Plus, X } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import { api } from '../../api.js';
 import {
-  BoroughBullet, Button, CARD, CONTROL, Icon, Notice, Page, SectionHeading, SelectField, Skeleton, TextField,
+  BoroughBullet, BOROUGH_NAMES, Button, CARD, CONTROL, Icon, LABEL, Notice, Page, SectionHeading, SelectField, Skeleton, TextField,
 } from '../../components/v2/index.js';
 import { BOROUGHS, SURFACES } from '../../constants.js';
 import { summarizeHours } from '../../lib/hours.js';
@@ -249,6 +249,8 @@ export default function AdminFields() {
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(null);
+  const [q, setQ] = useState('');
+  const [borough, setBorough] = useState('');
 
   useEffect(() => {
     let live = true;
@@ -259,6 +261,14 @@ export default function AdminFields() {
       live = false;
     };
   }, []);
+
+  // Filter the list in the browser (it is every field, already loaded).
+  const needle = q.trim().toLowerCase();
+  const shown = (fields ?? []).filter(
+    (f) =>
+      (!borough || f.borough === borough) &&
+      (!needle || `${f.name} ${f.location}`.toLowerCase().includes(needle) || f.field_id === added?.id),
+  );
 
   function onAdded(data) {
     setFields(data.fields);
@@ -293,13 +303,40 @@ export default function AdminFields() {
       {error && <Notice type="error">{error}</Notice>}
 
       <section aria-labelledby="all-fields">
-        <SectionHeading id="all-fields" aside={fields && <p className="text-[15px] text-muted-foreground tnum">{fields.length} fields, A–Z</p>}>
+        <SectionHeading
+          id="all-fields"
+          aside={
+            fields && (
+              <p role="status" className="text-[15px] text-muted-foreground tnum">
+                {shown.length === fields.length ? `${fields.length} fields, A–Z` : `${shown.length} of ${fields.length} fields`}
+              </p>
+            )
+          }
+        >
           All fields
         </SectionHeading>
-        {!fields && !error && <Skeleton rows={4} label="Loading fields" />}
         {fields && (
+          <div role="search" aria-label="Filter fields" className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px]">
+            <label className="flex min-w-0 flex-col gap-1.5">
+              <span className={LABEL}>Name or address</span>
+              <span className="relative">
+                <Icon icon={Search} tone="label" size="18px" className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. Marine Park" className={cn(CONTROL, 'pl-10')} />
+              </span>
+            </label>
+            <SelectField label="Borough" value={borough} onChange={(e) => setBorough(e.target.value)}>
+              <option value="">All boroughs</option>
+              {BOROUGH_NAMES.map((b) => (
+                <option key={b}>{b}</option>
+              ))}
+            </SelectField>
+          </div>
+        )}
+        {!fields && !error && <Skeleton rows={4} label="Loading fields" />}
+        {fields && shown.length === 0 && <p className="px-1 text-muted-foreground">No field matches. Clear the search or pick another borough.</p>}
+        {shown.length > 0 && (
           <ul className="divide-y divide-line-soft overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--lift)] dark:bg-surface-2">
-            {fields.map((f) => (
+            {shown.map((f) => (
               <FieldRow key={f.field_id} f={f} highlight={added?.id === f.field_id} />
             ))}
           </ul>
