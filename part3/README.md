@@ -2,7 +2,7 @@
 
 CS-GY 6083, Fall 2026. Abhinav Sivakumar (as21153), Devash Vikram (dv2482), Jason Parmar (jsp9287).
 
-React (Vite) front end, Node/Express JSON API, PostgreSQL 17. Who builds what, and when: [docs/WORK_PLAN.md](docs/WORK_PLAN.md).
+React (Vite) front end, Node/Express JSON API, PostgreSQL 17. Who builds what, and when: [docs/WORK_PLAN.md](docs/WORK_PLAN.md). Latest status for the team: [docs/TEAM_UPDATE.md](docs/TEAM_UPDATE.md).
 
 ## Run it locally
 
