@@ -40,6 +40,15 @@ LIMIT 200;
 
 `game_state` checks the field booking as well as the game. A game whose booking was rejected shows as cancelled. A game that reached kickoff while its booking was still pending shows as `not_approved`. The `Where` builder wraps each condition in parentheses, so an `OR` inside one condition cannot change the meaning of the others.
 
+Two more columns for the person viewing the list. `gameListSql(where, { viewerId })` takes the logged-in user's id as a parameter and adds one join, so each row says whether that user signed up. Only the viewer's own sign-up is looked up, never anyone else's:
+```sql
+LEFT JOIN GameRegistration me ON me.game_id = g.game_id AND me.user_id = $n
+-- in the SELECT list:
+me.registration_status                          AS my_registration, -- 'registered', 'cancelled' (left) or NULL
+r.start_time <= nyc_now() + INTERVAL '24 hours' AS leave_closed     -- too late to leave (U4)
+```
+Without a `viewerId`, `my_registration` is `NULL`. The app turns these into the "You're in" (· can't leave now / · waiting on the field) and "You left" labels: `myStatus()` and `<MyStatus>` in `client/src/components/v2/`.
+
 "Upcoming" (`UPCOMING` in `lib/games.js`) means:
 ```sql
 g.status = 'scheduled' AND r.status IN ('approved', 'pending') AND r.start_time > nyc_now()
@@ -72,6 +81,8 @@ The spec searches flights by source, destination and date, either one way or rou
 
 ### P2. Game status: `GET /api/public/status`
 The game list for `g.game_id = $1`, or for `f.field_id = $1 AND r.start_time >= $2::date AND r.start_time < $2::date + INTERVAL '1 day'`. Writing the day as a range lets PostgreSQL use an index on `start_time`. The result includes past and cancelled games, and the rejection reason if the field booking was rejected.
+
+P1, P2 and the field page (P7) pass the session's user id as `viewerId`, so a logged-in player sees "You're in" or "You left" on games they signed up for. Logged-out visitors get `my_registration = NULL`. Because these answers differ per user, the routes never send shared-cache headers.
 
 The field dropdown uses `GET /api/public/fields` with no parameters (P6): every field, A–Z.
 

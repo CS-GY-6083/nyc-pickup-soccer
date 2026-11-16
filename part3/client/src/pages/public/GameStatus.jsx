@@ -8,8 +8,8 @@ import { Link, useSearchParams } from 'react-router';
 import { ArrowRight, Search } from 'lucide-react';
 import { api } from '../../api.js';
 import {
-  FieldOptions, Board, BoardRow, Button, CARD, EmptyState, GAME_STATES, Icon, LABEL, LiveDot, Notice, Page, SectionHeading, Segmented,
-  SelectField, Skeleton, TextField, gameState,
+  FieldOptions, Board, BoardRow, Button, CARD, EmptyState, GAME_STATES, Icon, LABEL, LiveDot, MyStatus, Notice, Page, SectionHeading,
+  Segmented, SelectField, Skeleton, TextField, gameState, myStatus,
 } from '../../components/v2/index.js';
 import { formatSlot, todayInNewYork } from '../../format.js';
 import { fieldPhoto } from '../../lib/fieldPhotos.js';
@@ -26,6 +26,7 @@ const TONE_TEXT = { go: 'text-accent-ink', wait: 'text-warning', stop: 'text-des
 
 function StatusResult({ game }) {
   const s = gameState(game.game_state);
+  const mine = myStatus(game);
   return (
     <article aria-label={`Game ${game.game_id}`} className="flex flex-col gap-3">
       <Board label={`Game ${game.game_id}`}>
@@ -38,6 +39,12 @@ function StatusResult({ game }) {
             {s.label}
           </p>
           <p className="mt-2 max-w-[52ch] text-muted-foreground">{s.detail}</p>
+          {mine && (
+            <div className="mt-3 flex flex-col items-start gap-1.5">
+              <MyStatus game={game} surface="card" />
+              <p className="max-w-[52ch] text-[14px] text-muted-foreground">{mine.detail}</p>
+            </div>
+          )}
           {game.rejection_reason && (
             <p className="mt-3 rounded-md bg-destructive-soft px-3 py-2 text-[14px] font-medium text-destructive">
               Reason from the admin: {game.rejection_reason}

@@ -3,7 +3,7 @@
 // expected game ids below come straight from db/seed.sql.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startTestServer, gameIds, query } from './helpers.js';
+import { startTestServer, gameIds, query, USERS } from './helpers.js';
 
 let server;
 let anon;
@@ -150,5 +150,54 @@ describe('GET /public/status (game status)', () => {
   test('needs a game number, or a field and a date', async () => {
     assert.equal((await anon.get('/public/status')).status, 400);
     assert.equal((await anon.get('/public/status', { fieldId: 6 })).status, 400);
+  });
+});
+
+// "You're in" / "You left": each game row says whether the logged-in
+// viewer signed up (my_registration), and whether leaving is closed
+// (kickoff 24 hours away or less).
+describe('the viewer\'s own sign-up on public game lists', () => {
+  const mine = (res) => Object.fromEntries(res.data.games.map((g) => [g.game_id, g.my_registration]));
+  let grace;
+  let lucas;
+  before(async () => {
+    grace = server.client();
+    await grace.login(USERS.player);
+    lucas = server.client();
+    await lucas.login({ email: 'lucas.silva@example.com', password: 'lucas123' }); // left game 10
+  });
+
+  test('logged out: no game says anything about a sign-up', async () => {
+    const res = await anon.get('/public/games');
+    assert.ok(res.data.games.length > 0);
+    assert.ok(res.data.games.every((g) => g.my_registration === null));
+  });
+
+  test('a player sees only their own sign-ups, never anyone else\'s', async () => {
+    const res = await grace.get('/public/games');
+    assert.equal(res.status, 200);
+    const signedUp = Object.entries(mine(res)).filter(([, s]) => s !== null);
+    // Grace is registered for 10, 12, 13 and 15 in db/seed.sql. Other games
+    // have sign-ups by other players, which must stay NULL here.
+    assert.deepEqual(signedUp, [['10', 'registered'], ['12', 'registered'], ['13', 'registered'], ['15', 'registered']]);
+  });
+
+  test('a player who left a game sees "cancelled" on its status', async () => {
+    const res = await lucas.get('/public/status', { gameId: 10 });
+    assert.equal(res.data.games[0].my_registration, 'cancelled');
+    // Grace is still in the same game.
+    assert.equal((await grace.get('/public/status', { gameId: 10 })).data.games[0].my_registration, 'registered');
+  });
+
+  test('a field page lists the viewer\'s sign-ups too', async () => {
+    // Game 10 is at field 1.
+    const res = await grace.get('/public/fields/1');
+    assert.equal(mine(res)[10], 'registered');
+  });
+
+  test('leave_closed: true once kickoff is 24 hours away or less', async () => {
+    const closed = async (gameId) => (await anon.get('/public/status', { gameId })).data.games[0].leave_closed;
+    assert.equal(await closed(10), false); // tomorrow 14:00, 26 hours away
+    assert.equal(await closed(18), true);  // kicked off at 11:00 today
   });
 });

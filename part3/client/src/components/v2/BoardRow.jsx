@@ -2,7 +2,9 @@
 //   <Board label="Upcoming games"> <BoardRow game={g} photo={p} action={…}/> … </Board>
 // A row opens the game detail (#/games/:id).
 // Status and capacity are words (Game on · Waiting on the field; OPEN · 6,
-// LAST 3, FULL). Times use tabular numerals on flap tiles.
+// LAST 3, FULL). Times use tabular numerals on flap tiles. When the game
+// list was loaded for a logged-in viewer, a "You're in" / "You left" pill
+// sits under the status (MyStatus).
 import { ChevronRight } from 'lucide-react';
 import { formatDate, formatTime } from '@/format.js';
 import { cn } from '@/lib/utils.js';
@@ -11,7 +13,8 @@ import FieldPhoto from './FieldPhoto.jsx';
 import { FlapWord, TimeTiles } from './FlapTile.jsx';
 import Icon from './Icon.jsx';
 import LiveDot from './LiveDot.jsx';
-import { capacity, FLAP_TONE, gameState, isUpcoming } from './gameState.js';
+import MyStatus from './MyStatus.jsx';
+import { capacity, FLAP_TONE, gameState, isUpcoming, myStatusText } from './gameState.js';
 
 // Wide boards (container >= 56rem) put every row on one line. Rows are
 // subgrids of the board's grid, so every column lines up like a ruler and
@@ -98,6 +101,7 @@ export default function BoardRow({
 }) {
   const big = size === 'lg';
   const when = `${formatDate(game.start_time)}, ${formatTime(game.start_time)}`;
+  const mine = myStatusText(game);
   const chevron = href ? (
     <Icon
       icon={ChevronRight}
@@ -137,8 +141,14 @@ export default function BoardRow({
       </div>
 
       {/* Status */}
-      <div className={cn('col-start-2 row-start-1 justify-self-end', big ? '@4xl:col-start-4' : '@4xl:col-start-4 @4xl:justify-self-start')}>
+      <div
+        className={cn(
+          'col-start-2 row-start-1 flex flex-col items-end gap-1.5 justify-self-end',
+          big ? '@4xl:col-start-4' : '@4xl:col-start-4 @4xl:items-start @4xl:justify-self-start',
+        )}
+      >
         <StatusWords state={game.game_state} size={big ? 'lg' : 'md'} />
+        <MyStatus game={game} />
       </div>
 
       {/* Field (the row's link) */}
@@ -158,6 +168,7 @@ export default function BoardRow({
                 Game #{game.game_id}, {when}, at{' '}
               </span>
               {game.field_name}
+              {mine && <span className="sr-only">, {mine}</span>}
             </RowLink>
           ) : (
             <span className={cn('line-clamp-2 font-display font-semibold text-flap-foreground', big ? 'text-[22px] leading-tight sm:text-[26px]' : 'text-[16px] leading-snug')}>

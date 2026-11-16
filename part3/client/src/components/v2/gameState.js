@@ -1,14 +1,14 @@
 // Status words for a game's game_state (server/src/lib/games.js) and the
 // capacity word. Status is always words + icon, never colour alone.
-import { CircleCheck, CircleSlash, Flag, Hourglass, Radio, Trophy, Ban } from 'lucide-react';
+import { CircleCheck, CircleSlash, Flag, Hourglass, Radio, Trophy, Ban, UserCheck, UserMinus } from 'lucide-react';
 
 export const GAME_STATES = {
   confirmed: { label: 'Game on', detail: 'Field booking approved. The game is on.', tone: 'go', icon: CircleCheck },
   pending_field: { label: 'Waiting on the field', detail: 'The field booking is waiting for an admin to approve it.', tone: 'wait', icon: Hourglass },
   not_approved: { label: 'Field never approved', detail: 'Kick-off passed before the field booking was approved.', tone: 'stop', icon: CircleSlash },
   in_progress: { label: 'In play', detail: 'Kick-off has passed and the game is being played now.', tone: 'go', icon: Radio, live: true },
-  finished: { label: 'Full time', detail: 'The game has been played. The organizer has not marked it completed yet.', tone: 'info', icon: Flag },
-  completed: { label: 'Completed', detail: 'Played and marked completed by the organizer. Players can rate it.', tone: 'info', icon: Trophy },
+  finished: { label: 'Full time', detail: 'The game has been played, and players can rate it. The organizer has not marked it completed yet.', tone: 'info', icon: Flag },
+  completed: { label: 'Completed', detail: 'Played and marked completed by the organizer.', tone: 'info', icon: Trophy },
   cancelled: { label: 'Called off', detail: 'The game was cancelled or its field booking was rejected.', tone: 'stop', icon: Ban },
 };
 
@@ -35,4 +35,57 @@ export function capacity(game) {
 const UPCOMING = new Set(['confirmed', 'pending_field']);
 export function isUpcoming(game) {
   return UPCOMING.has(game.game_state);
+}
+
+/**
+ * The logged-in viewer's own place in a game: "You're in" or "You left".
+ * Uses my_registration and leave_closed from the game list
+ * (server/src/lib/games.js, gameListSql with viewerId). Returns null when
+ * there is nothing personal to say: logged out, never signed up, or the
+ * game is over or called off (its own status covers that).
+ *   { label, qualifier, detail, tone: 'go' | 'muted', icon }
+ */
+export function myStatus(game) {
+  const mine = game?.my_registration;
+  const state = game?.game_state;
+  if (mine === 'registered' && state === 'in_progress') {
+    return { label: "You're in", qualifier: null, detail: "You're on the list for this game.", tone: 'go', icon: UserCheck };
+  }
+  if (mine === 'registered' && UPCOMING.has(state)) {
+    const waiting = state === 'pending_field';
+    const fieldNote = waiting ? ' The game goes ahead once an admin approves the field booking.' : '';
+    if (game.leave_closed) {
+      return {
+        label: "You're in",
+        qualifier: "can't leave now",
+        detail: `You're on the list. Kick-off is less than 24 hours away, so you can no longer leave.${fieldNote}`,
+        tone: 'go',
+        icon: UserCheck,
+      };
+    }
+    return {
+      label: "You're in",
+      qualifier: waiting ? 'waiting on the field' : null,
+      detail: `You're on the list for this game.${fieldNote}`,
+      tone: 'go',
+      icon: UserCheck,
+    };
+  }
+  if (mine === 'cancelled' && UPCOMING.has(state)) {
+    const room = Number(game.spots_left) > 0;
+    return {
+      label: 'You left',
+      qualifier: null,
+      detail: room ? "You left this game. You can join again while there's room." : 'You left this game, and it is full now.',
+      tone: 'muted',
+      icon: UserMinus,
+    };
+  }
+  return null;
+}
+
+/** Words for a screen reader, e.g. "You're in, can't leave now". */
+export function myStatusText(game) {
+  const s = myStatus(game);
+  return s ? [s.label, s.qualifier].filter(Boolean).join(', ') : '';
 }

@@ -75,7 +75,17 @@ signups AS (
 //   in_progress | finished     : scheduled game whose time has started / passed
 //   confirmed                  : upcoming, field booking approved
 //   pending_field              : upcoming, field booking not reviewed yet
-const GAME_SELECT = `
+// Two more columns for the logged-in viewer (see gameListSql):
+//   my_registration            : the viewer's own sign-up, 'registered' or
+//                                'cancelled' (left); NULL if none or no viewer
+//   leave_closed               : kickoff is 24 hours away or less, so a player
+//                                can no longer leave (use case U4)
+function gameSelect(viewerPlaceholder) {
+  const mine = viewerPlaceholder ? 'me.registration_status' : 'NULL::varchar';
+  const meJoin = viewerPlaceholder
+    ? `\nLEFT JOIN GameRegistration me ON me.game_id = g.game_id AND me.user_id = ${viewerPlaceholder}`
+    : '';
+  return `
 SELECT g.game_id,
        g.format,
        g.skill_level,
@@ -105,21 +115,28 @@ SELECT g.game_id,
            WHEN r.start_time <= nyc_now()        THEN 'in_progress'
            WHEN r.status = 'approved'            THEN 'confirmed'
            ELSE 'pending_field'
-       END                                      AS game_state
+       END                                      AS game_state,
+       ${mine}                                  AS my_registration,
+       r.start_time <= nyc_now() + INTERVAL '24 hours' AS leave_closed
 FROM PickupGame g
 JOIN Reservation r ON r.reservation_id = g.reservation_id
 JOIN Field f       ON f.field_id = r.field_id
 JOIN Users o       ON o.user_id = g.organizer_id
-LEFT JOIN signups s ON s.game_id = g.game_id`;
+LEFT JOIN signups s ON s.game_id = g.game_id${meJoin}`;
+}
 
 /**
  * Full game-list query. `orderBy` and `limit` must come from your code,
  * never from user input (they are put into the SQL text directly).
+ * `viewerId` (optional) is the logged-in user's id: each row then says
+ * whether that user signed up (my_registration). Only the viewer's own
+ * sign-up is looked up, never anyone else's. It is passed as a parameter.
  */
-export function gameListSql(where, { orderBy = 'r.start_time', limit = 200 } = {}) {
+export function gameListSql(where, { orderBy = 'r.start_time', limit = 200, viewerId } = {}) {
   if (!Number.isInteger(limit) || limit < 1) throw new Error(`gameListSql: bad limit ${limit}`);
+  const viewer = Number.isInteger(viewerId) && viewerId > 0 ? where.value(viewerId) : null;
   return `WITH ${SIGNUPS_CTE}
-${GAME_SELECT}
+${gameSelect(viewer)}
 WHERE ${where.toSql()}
 ORDER BY ${orderBy}, g.game_id
 LIMIT ${limit}`;

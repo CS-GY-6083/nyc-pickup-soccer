@@ -6,6 +6,11 @@
 //   GET /api/public/fields/:id       one field: hours, closures, upcoming games
 //   GET /api/public/games            search upcoming games      (spec: search future flights)
 //   GET /api/public/status           game status lookup         (spec: flight status)
+//
+// The game lists also say whether the logged-in viewer (if any) signed up
+// for each game (my_registration), for the "You're in" / "You left" labels.
+// Because of that these responses differ per user: never give them
+// shared-cache headers (Cache-Control: public / s-maxage).
 import { Router } from 'express';
 import { query } from '../db.js';
 import { HttpError } from '../lib/errors.js';
@@ -38,7 +43,7 @@ router.get('/fields/:id', async (req, res) => {
   const games = new Where().raw(UPCOMING).add('f.field_id = ?', id);
   const [closures, upcoming] = await Promise.all([
     query(FIELD_CLOSURES_SQL, [id]),
-    query(gameListSql(games), games.params),
+    query(gameListSql(games, { viewerId: req.session.userId }), games.params),
   ]);
   res.json({ field, hours, closures: closures.rows, games: upcoming.rows });
 });
@@ -46,7 +51,7 @@ router.get('/fields/:id', async (req, res) => {
 // GET /api/public/games?borough=&q=&fieldId=&from=&to=&format=&skill=
 router.get('/games', async (req, res) => {
   const where = gameSearchFilters(req.query);
-  const { rows } = await query(gameListSql(where), where.params);
+  const { rows } = await query(gameListSql(where, { viewerId: req.session.userId }), where.params);
   res.json({ games: rows });
 });
 
@@ -66,7 +71,7 @@ router.get('/status', async (req, res) => {
     where.add('f.field_id = ?', fieldId);
     where.add("r.start_time >= ?::date AND r.start_time < ?::date + INTERVAL '1 day'", date);
   }
-  const { rows } = await query(gameListSql(where), where.params);
+  const { rows } = await query(gameListSql(where, { viewerId: req.session.userId }), where.params);
   res.json({ games: rows });
 });
 
