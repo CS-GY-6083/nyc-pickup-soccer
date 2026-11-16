@@ -94,3 +94,13 @@
   --font-sans: "Public Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Schibsted Grotesk Variable", "Helvetica Neue", Arial, system-ui, sans-serif;
 }
+
+/* Native controls (date pickers, scrollbars, checkboxes) follow the theme.
+   tokens.css sets color-scheme in the "theme" layer, but legacy.css's
+   `all: revert` (a later layer) resets it on <html>, so it is restated
+   here, outside any layer. */
+:root { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+}

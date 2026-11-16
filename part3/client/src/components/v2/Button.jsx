@@ -1,5 +1,7 @@
 // Pill buttons for v2 pages. Hover steps the colour, press scales to .97,
-// primary glows in dark mode only. Renders <a> when given href.
+// primary glows in dark mode only. Renders a router <Link> when given `to`
+// (in-app pages) and a plain <a> when given `href`.
+import { Link } from 'react-router';
 import { cn } from '@/lib/utils.js';
 
 const BASE =
@@ -25,8 +27,15 @@ const SIZES = {
   lg: 'h-12 px-6 text-[16px]',
 };
 
-export default function Button({ variant = 'primary', size = 'md', href, className, children, ...rest }) {
+export default function Button({ variant = 'primary', size = 'md', href, to, className, children, ...rest }) {
   const classes = cn(BASE, VARIANTS[variant], SIZES[size], className);
+  if (to) {
+    return (
+      <Link to={to} className={cn(classes, 'no-underline')} {...rest}>
+        {children}
+      </Link>
+    );
+  }
   if (href) {
     return (
       <a href={href} className={classes} {...rest}>

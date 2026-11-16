@@ -9,6 +9,7 @@ import RequireRole from './auth/RequireRole.jsx';
 import NavBar from './components/NavBar.jsx';
 import Flash from './components/Flash.jsx';
 import ComingSoon from './pages/ComingSoon.jsx';
+import NotFound from './pages/NotFound.jsx';
 import Home from './pages/public/Home.jsx';
 import GameStatus from './pages/public/GameStatus.jsx';
 import Login from './pages/public/Login.jsx';
@@ -18,6 +19,10 @@ import Logout from './pages/public/Logout.jsx';
 import PlayerHome from './pages/player/PlayerHome.jsx';
 import OrganizerHome from './pages/organizer/OrganizerHome.jsx';
 import AdminHome from './pages/admin/AdminHome.jsx';
+import AdminBookings from './pages/admin/AdminBookings.jsx';
+import AdminFields from './pages/admin/AdminFields.jsx';
+import AdminClosures from './pages/admin/AdminClosures.jsx';
+import AdminGames from './pages/admin/AdminGames.jsx';
 // Field finder (Abhinav): the map page is lazy-loaded so MapLibre stays
 // out of the main bundle.
 import { lazy, Suspense } from 'react';
@@ -63,17 +68,17 @@ export default function App() {
 
           {/* Admin (Abhinav; reports: Devash) */}
           <Route path="/admin" element={guard(ADMINS, <AdminHome />)} />
-          <Route path="/admin/bookings" element={guard(ADMINS, <ComingSoon title="Pending field bookings" />)} />
-          <Route path="/admin/fields" element={guard(ADMINS, <ComingSoon title="Fields" />)} />
-          <Route path="/admin/closures" element={guard(ADMINS, <ComingSoon title="Field closures" />)} />
-          <Route path="/admin/games" element={guard(ADMINS, <ComingSoon title="All games" />)} />
+          <Route path="/admin/bookings" element={guard(ADMINS, <AdminBookings />)} />
+          <Route path="/admin/fields" element={guard(ADMINS, <AdminFields />)} />
+          <Route path="/admin/closures" element={guard(ADMINS, <AdminClosures />)} />
+          <Route path="/admin/games" element={guard(ADMINS, <AdminGames />)} />
           <Route path="/admin/reports" element={guard(ADMINS, <ComingSoon title="Reports" />)} />
 
           {/* Field finder (Abhinav) */}
           <Route path="/map" element={<Suspense fallback={<p className="muted">Loading the field map…</p>}><FieldMap /></Suspense>} />
           <Route path="/fields/:id" element={<FieldPage />} />
 
-          <Route path="*" element={<ComingSoon title="Page not found" text="There is no page at this address." />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <SiteFooter />
