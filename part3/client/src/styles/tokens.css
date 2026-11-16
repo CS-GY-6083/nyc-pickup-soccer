@@ -100,16 +100,16 @@
   --sign: var(--p-sign-black);
   --sign-text: var(--p-white);
   --sign-rule: var(--p-white);
-  --board: var(--p-sign-black);
-  --flap: var(--p-graphite-800);
-  --flap-top: oklch(1 0 0 / 0.06);
-  --flap-text: var(--p-white);
-  --flap-muted: var(--p-chalk-200);
-  --flap-go: var(--p-green-300);
-  --flap-wait: var(--p-amber-400);
-  --flap-stop: var(--p-red-400);
-  --flap-info: var(--p-blue-300);
-  --brass: var(--p-green-300);
+  --board: var(--p-white);
+  --flap: var(--p-chalk-100);
+  --flap-top: oklch(1 0 0 / 0.6);
+  --flap-text: var(--p-ink-900);
+  --flap-muted: var(--p-ink-600);
+  --flap-go: var(--p-green-700);
+  --flap-wait: var(--p-amber-700);
+  --flap-stop: var(--p-red-700);
+  --flap-info: var(--p-blue-700);
+  --brass: var(--p-green-700);
   --highlight: oklch(1 0 0 / 0.7);
   color-scheme: light;
 }

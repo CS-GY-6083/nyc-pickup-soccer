@@ -1,0 +1,192 @@
+/* Craft layer for the v2 "Matchday Line" components (src/components/v2).
+   Plain CSS on the design tokens (tokens.css); nothing here invents a colour.
+   Imported by src/components/v2/index.js.
+
+   The layer order is repeated here so this file can load before or after
+   index.css without changing the cascade (first declaration wins). */
+@layer theme, base, legacy, components, utilities;
+
+/* ---------------------------------------------------------------------
+   Component tokens, per theme (derived from tokens.css primitives).
+   --------------------------------------------------------------------- */
+@layer theme {
+  :root {
+    /* Skyline line art. Neutral graphite on white (multiply, line art only),
+       lit windows in dark mode. Green stays an accent elsewhere. */
+    --sky-back: var(--p-chalk-100);
+    --sky-mid: var(--p-chalk-50);
+    --sky-fill: var(--p-white);
+    --sky-line: var(--p-ink-600);
+    --sky-blend: multiply;
+    --sky-win: transparent;
+    --sky-flame: var(--p-white);
+    --sky-glow: none;
+
+    /* Neutral photo scrim, only under text that sits on a photo. */
+    --scrim: linear-gradient(in oklch to top, oklch(0 0 0 / 0.62) 0%, oklch(0 0 0 / 0.28) 45%, oklch(0 0 0 / 0) 100%);
+
+    /* Raised surfaces: soft neutral shadow in light mode. */
+    --lift: 0 1px 2px var(--shadow), 0 14px 36px -18px var(--shadow);
+    --lift-hover: 0 2px 4px var(--shadow), 0 22px 44px -18px var(--shadow);
+    --primary-glow: 0 8px 20px -12px var(--shadow);
+  }
+
+  :root[data-theme="dark"] {
+    --flap-sheen: oklch(1 0 0 / 0.08);
+    --sky-back: var(--p-night-2);
+    --sky-mid: var(--p-night-3);
+    --sky-fill: var(--p-night-4);
+    --sky-line: var(--p-night-muted);
+    --sky-blend: screen;
+    --sky-win: var(--p-amber-400);
+    --sky-flame: var(--p-amber-400);
+    --sky-glow: drop-shadow(0 0 2.5px oklch(from var(--p-amber-400) l c h / 0.55));
+    --lift: inset 0 1px 0 var(--highlight);
+    --lift-hover: inset 0 1px 0 var(--highlight);
+    --primary-glow: 0 0 22px var(--glow);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --flap-sheen: oklch(1 0 0 / 0.08);
+      --sky-back: var(--p-night-2);
+      --sky-mid: var(--p-night-3);
+      --sky-fill: var(--p-night-4);
+      --sky-line: var(--p-night-muted);
+      --sky-blend: screen;
+      --sky-win: var(--p-amber-400);
+      --sky-flame: var(--p-amber-400);
+      --sky-glow: drop-shadow(0 0 2.5px oklch(from var(--p-amber-400) l c h / 0.55));
+      --lift: inset 0 1px 0 var(--highlight);
+      --lift-hover: inset 0 1px 0 var(--highlight);
+      --primary-glow: 0 0 22px var(--glow);
+    }
+  }
+}
+
+@layer components {
+  /* Browser surfaces carry the palette too. */
+  [data-ui] {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    caret-color: var(--accent);
+    accent-color: var(--accent);
+    text-rendering: optimizeLegibility;
+  }
+  [data-ui] ::selection { background: oklch(from var(--vivid) l c h / 0.4); color: var(--text); }
+  [data-ui] :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  [data-ui] a { text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+  [data-ui] :is(h1, h2, h3) { text-wrap: balance; }
+  [data-ui] p { text-wrap: pretty; }
+  [data-ui] .tnum { font-variant-numeric: tabular-nums; }
+
+  /* 1. Concentric radius: inner radius = outer radius - padding.
+     <div class="concentric" style="--r-outer:20px;--pad:8px">
+       <img class="concentric-inner"> */
+  .concentric {
+    border-radius: var(--r-outer, var(--r-card));
+    padding: var(--pad, var(--space-2));
+  }
+  .concentric-inner {
+    border-radius: max(4px, calc(var(--r-outer, var(--r-card)) - var(--pad, var(--space-2))));
+  }
+
+  /* 6. Masked edges. Scroller fades only on the side with more to see
+     (the Scroller component sets --fade-l / --fade-r). */
+  .mask-x {
+    --fade-l: 24px;
+    --fade-r: 24px;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    transition: --fade-l 160ms ease-out, --fade-r 160ms ease-out;
+  }
+  .mask-b {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 var(--mask-solid, 58%), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 var(--mask-solid, 58%), transparent 100%);
+  }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Board housing (white in light mode, near-black in dark): hairlines are
+     alpha of its own text colour, so they read on either. */
+  .board {
+    --line-soft: oklch(from var(--flap-text) l c h / 0.07);
+    --line: oklch(from var(--flap-text) l c h / 0.12);
+    --line-strong: oklch(from var(--flap-text) l c h / 0.22);
+    background: var(--board);
+    color: var(--flap-text);
+    box-shadow: inset 0 0 0 1px var(--line-soft);
+  }
+  /* 8. Dark depth: near-black board and sign bands on night layers get a
+     hairline and an inset top highlight instead of a shadow. */
+  :root[data-theme="dark"] :is(.board, .sign-band) { box-shadow: inset 0 1px 0 var(--highlight), 0 0 0 1px oklch(from var(--p-night-text) l c h / 0.12); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) :is(.board, .sign-band) { box-shadow: inset 0 1px 0 var(--highlight), 0 0 0 1px oklch(from var(--p-night-text) l c h / 0.12); }
+  }
+
+  /* Flap tile: two-tone (lighter top half, soft seam, no hard line) with
+     hinge notches cut into the left and right edges, outside the glyphs. */
+  .flap {
+    --notch: 2.5px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: var(--r-flap);
+    color: var(--flap-text);
+    /* Lighter top half with a 2px soft seam (no hard line behind glyphs). */
+    background:
+      linear-gradient(to bottom, var(--flap-sheen, var(--flap-top)) 0, var(--flap-sheen, var(--flap-top)) calc(50% - 1px), transparent calc(50% + 1px)),
+      var(--flap);
+    box-shadow:
+      inset 0 0 0 1px oklch(from var(--flap-text) l c h / 0.10),
+      inset 0 1px 0 oklch(from var(--flap-text) l c h / 0.14);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    -webkit-mask:
+      radial-gradient(circle at 0 50%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
+      radial-gradient(circle at 100% 50%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+    mask:
+      radial-gradient(circle at 0 50%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
+      radial-gradient(circle at 100% 50%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+  }
+
+  /* Photo scrim: neutral black alpha, only where text sits on a photo. */
+  .scrim { position: absolute; inset: auto 0 0 0; height: 55%; background: var(--scrim); pointer-events: none; }
+
+  /* Skyline art (10. multiply on light neutral surfaces, screen in dark). */
+  .skyline { display: block; overflow: hidden; mix-blend-mode: var(--sky-blend); }
+  .skyline .sl-back { fill: var(--sky-back); stroke: var(--sky-line); stroke-width: 0.9; stroke-opacity: 0.6; stroke-linejoin: round; }
+  .skyline .sl-mid { fill: var(--sky-mid); stroke: var(--sky-line); stroke-width: 1.1; stroke-opacity: 0.85; stroke-linejoin: round; }
+  .skyline .sl-front { fill: var(--sky-fill); stroke: var(--sky-line); stroke-width: 1.3; stroke-linejoin: round; }
+  .skyline .sl-line { fill: none; stroke: var(--sky-line); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+  .skyline .sl-strut { fill: none; stroke: var(--sky-line); stroke-width: 2.2; stroke-linecap: round; }
+  .skyline .sl-thin { fill: none; stroke: var(--sky-line); stroke-width: 0.6; stroke-linecap: round; opacity: 0.6; }
+  .skyline .sl-solid { fill: var(--sky-line); }
+  .skyline .sl-flame { fill: var(--sky-flame); stroke: var(--sky-line); stroke-width: 0.6; filter: var(--sky-glow); }
+  .skyline .sl-win { fill: var(--sky-win); filter: var(--sky-glow); }
+  .skyline .sl-lit { filter: var(--sky-glow); }
+  .skyline .sl-landmark { transition: opacity 160ms ease-out; }
+  .skyline .sl-landmark.is-active :is(.sl-line, .sl-thin, .sl-strut) { stroke: var(--accent); opacity: 1; }
+  .skyline .sl-landmark.is-active :is(.sl-back, .sl-mid, .sl-front) { stroke: var(--accent); stroke-opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .skyline .sl-landmark { transition: none; } }
+
+  /* Live dot: pulsing ring for games in play. */
+  .live-dot { position: relative; display: inline-block; width: 0.5rem; height: 0.5rem; flex: none; border-radius: var(--r-pill); background: var(--flap-go); }
+  .live-dot::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit;
+    animation: live-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  :root[data-theme="dark"] .live-dot { box-shadow: 0 0 10px var(--glow); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .live-dot { box-shadow: 0 0 10px var(--glow); } }
+}
+
+@property --fade-l { syntax: "<length>"; inherits: false; initial-value: 24px; }
+@property --fade-r { syntax: "<length>"; inherits: false; initial-value: 24px; }
+
+@keyframes live-ping {
+  70%, 100% { transform: scale(2.8); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot::after { animation: none; opacity: 0; }
+  .mask-x { transition: none; }
+}

@@ -13,3 +13,6 @@ playwright-report/
 # Photo candidates (not shipped)
 part3/design/photos/raw/
 part3/design/photos/sheet*.jpg
+
+# Prototype single-file build
+part3/client/dist-proto/
