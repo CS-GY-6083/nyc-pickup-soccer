@@ -245,7 +245,107 @@ And its upcoming games, from the shared game list with `UPCOMING AND f.field_id 
 _To be added._
 
 ## Organizer (Jason)
-_To be added._
+
+All organizer routes are in `server/src/routes/organizer.js`, mounted behind
+`requireRole('organizer')`. Every game query also checks
+`g.organizer_id = req.user.id`; another organizer's game number returns 404.
+Shared SQL for these use cases is in `server/src/lib/organizer.js`.
+
+### O1. My hosted games: `GET /api/organizer/games`
+
+With no dates, the route lists only this organizer's games whose kick-off is
+between `nyc_now()` and 30 days from now. `from`, `to`, `borough` and `fieldId`
+add parameterized filters. The result uses `gameListSql`, so each row includes
+its field, booking, computed `GameState`, capacity and active sign-up count.
+
+```sql
+SELECT ...
+FROM PickupGame g
+JOIN Reservation r ON r.reservation_id = g.reservation_id
+JOIN GameState gs ON gs.game_id = g.game_id
+JOIN Field f ON f.field_id = r.field_id
+...
+WHERE g.organizer_id = $1
+  AND r.start_time >= nyc_now()
+  AND r.start_time < nyc_now() + INTERVAL '30 days'
+ORDER BY r.start_time, g.game_id;
+```
+
+The roster endpoint, `GET /api/organizer/games/:id/players`, first verifies
+ownership, then lists active registrations before cancelled ones. It returns
+names and roles but never email addresses or password hashes.
+
+### O2. Open field slots: `GET /api/organizer/fields/:id/open-slots`
+
+This generalizes Part 2 Q9. It starts with the field's operating-hours range
+for the requested day, subtracts approved bookings and field closures as a
+PostgreSQL `tsmultirange`, and omits gaps shorter than one hour. Pending
+bookings do not hold the field.
+
+```sql
+SELECT free
+FROM open_window o,
+     unnest(tsmultirange(o.win)
+            - COALESCE((SELECT range_agg(slot) FROM busy),
+                       '{}'::tsmultirange)) AS free
+WHERE upper(free) - lower(free) >= INTERVAL '1 hour';
+```
+
+### O2. Create a game: `POST /api/organizer/games`
+
+The server validates the field, future same-day start/end, 1-3 hour database
+rule, format, skill level and capacity. It checks opening hours, closures and
+approved overlaps immediately before writing. One transaction inserts the
+pending field booking and its game, so either both records exist or neither
+does:
+
+```sql
+BEGIN;
+INSERT INTO Reservation (user_id, field_id, start_time, end_time)
+VALUES ($1, $2, $3, $4)
+RETURNING reservation_id;
+
+INSERT INTO PickupGame
+       (organizer_id, reservation_id, format, skill_level, max_players)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING game_id;
+COMMIT;
+```
+
+### O3. Complete or cancel: `POST /api/organizer/games/:id/status`
+
+The transaction locks the game's `Reservation` first and `PickupGame` second,
+the same order as an admin review. Completing requires an approved booking and
+a kick-off that has started. Cancelling updates the booking and game and
+cancels every active registration in the same transaction.
+
+```sql
+SELECT ... FROM Reservation r JOIN PickupGame g ... FOR UPDATE OF r;
+SELECT ... FROM PickupGame ... FOR UPDATE;
+UPDATE Reservation SET status = 'cancelled' ...;
+UPDATE PickupGame SET status = 'cancelled' ...;
+UPDATE GameRegistration SET registration_status = 'cancelled' ...;
+```
+
+### O4. Ratings: `GET /api/organizer/ratings`
+
+A grouped query keeps every hosted game, computes `AVG(GameRating.rating)` and
+uses filtered `json_agg` to return each player's stars and optional comment.
+Games with no ratings have a count of zero and an empty JSON array.
+
+### O5. Frequent players: `GET /api/organizer/frequent-players`
+
+Part 2 Q5 is restricted to this organizer, active registrations, completed
+games and the last year. `RANK()` gives ties the same position. The companion
+endpoint `GET /api/organizer/players/:id/games` verifies that the player joined
+one of this organizer's games before listing that player's games.
+
+### O6. Reports: `GET /api/organizer/reports`
+
+The default range is the year ending today; `from` and `to` select an inclusive
+custom range. `generate_series` returns every calendar month, including zeroes,
+and a left join adds the number of sign-up events and registrations that remain
+active. The page shows the totals plus an accessible monthly chart/table.
 
 ## Admin (Abhinav; reports: Devash)
 

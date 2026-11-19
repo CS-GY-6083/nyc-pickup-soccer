@@ -18,6 +18,11 @@ import Goodbye from './pages/public/Goodbye.jsx';
 import Logout from './pages/public/Logout.jsx';
 import PlayerHome from './pages/player/PlayerHome.jsx';
 import OrganizerHome from './pages/organizer/OrganizerHome.jsx';
+import OrganizerGames from './pages/organizer/OrganizerGames.jsx';
+import CreateGame from './pages/organizer/CreateGame.jsx';
+import OrganizerRatings from './pages/organizer/OrganizerRatings.jsx';
+import FrequentPlayers from './pages/organizer/FrequentPlayers.jsx';
+import OrganizerReports from './pages/organizer/OrganizerReports.jsx';
 import AdminHome from './pages/admin/AdminHome.jsx';
 import AdminBookings from './pages/admin/AdminBookings.jsx';
 import AdminFields from './pages/admin/AdminFields.jsx';
@@ -60,11 +65,11 @@ export default function App() {
 
           {/* Organizer (Jason) */}
           <Route path="/organizer" element={guard(ORGANIZERS, <OrganizerHome />)} />
-          <Route path="/organizer/games" element={guard(ORGANIZERS, <ComingSoon title="My hosted games" />)} />
-          <Route path="/organizer/games/new" element={guard(ORGANIZERS, <ComingSoon title="Create a game" />)} />
-          <Route path="/organizer/ratings" element={guard(ORGANIZERS, <ComingSoon title="Game ratings" />)} />
-          <Route path="/organizer/players" element={guard(ORGANIZERS, <ComingSoon title="Frequent players" />)} />
-          <Route path="/organizer/reports" element={guard(ORGANIZERS, <ComingSoon title="Reports" />)} />
+          <Route path="/organizer/games" element={guard(ORGANIZERS, <OrganizerGames />)} />
+          <Route path="/organizer/games/new" element={guard(ORGANIZERS, <CreateGame />)} />
+          <Route path="/organizer/ratings" element={guard(ORGANIZERS, <OrganizerRatings />)} />
+          <Route path="/organizer/players" element={guard(ORGANIZERS, <FrequentPlayers />)} />
+          <Route path="/organizer/reports" element={guard(ORGANIZERS, <OrganizerReports />)} />
 
           {/* Admin (Abhinav; reports: Devash) */}
           <Route path="/admin" element={guard(ADMINS, <AdminHome />)} />
