@@ -17,12 +17,15 @@ import Register from './pages/public/Register.jsx';
 import Goodbye from './pages/public/Goodbye.jsx';
 import Logout from './pages/public/Logout.jsx';
 import PlayerHome from './pages/player/PlayerHome.jsx';
+import PlayerGames from './pages/player/PlayerGames.jsx';
+import PlayerSearch from './pages/player/PlayerSearch.jsx';
 import OrganizerHome from './pages/organizer/OrganizerHome.jsx';
 import AdminHome from './pages/admin/AdminHome.jsx';
 import AdminBookings from './pages/admin/AdminBookings.jsx';
 import AdminFields from './pages/admin/AdminFields.jsx';
 import AdminClosures from './pages/admin/AdminClosures.jsx';
 import AdminGames from './pages/admin/AdminGames.jsx';
+import AdminReports from './pages/admin/AdminReports.jsx';
 // Field finder (Abhinav): the map page is lazy-loaded so MapLibre stays
 // out of the main bundle.
 import { lazy, Suspense } from 'react';
@@ -53,8 +56,8 @@ export default function App() {
 
           {/* Player (Devash) */}
           <Route path="/player" element={guard(['player'], <PlayerHome />)} />
-          <Route path="/player/games" element={guard(PLAYERS, <ComingSoon title="My games" />)} />
-          <Route path="/player/search" element={guard(PLAYERS, <ComingSoon title="Find & join games" />)} />
+          <Route path="/player/games" element={guard(PLAYERS, <PlayerGames />)} />
+          <Route path="/player/search" element={guard(PLAYERS, <PlayerSearch />)} />
           <Route path="/player/ratings" element={guard(PLAYERS, <ComingSoon title="Rate past games" />)} />
           <Route path="/player/activity" element={guard(PLAYERS, <ComingSoon title="My activity" />)} />
 
@@ -72,7 +75,7 @@ export default function App() {
           <Route path="/admin/fields" element={guard(ADMINS, <AdminFields />)} />
           <Route path="/admin/closures" element={guard(ADMINS, <AdminClosures />)} />
           <Route path="/admin/games" element={guard(ADMINS, <AdminGames />)} />
-          <Route path="/admin/reports" element={guard(ADMINS, <ComingSoon title="Reports" />)} />
+          <Route path="/admin/reports" element={guard(ADMINS, <AdminReports />)} />
 
           {/* Field finder (Abhinav) */}
           <Route path="/map" element={<Suspense fallback={<p className="muted">Loading the field map…</p>}><FieldMap /></Suspense>} />
