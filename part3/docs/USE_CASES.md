@@ -242,7 +242,91 @@ ORDER BY start_time, closure_id;
 And its upcoming games, from the shared game list with `UPCOMING AND f.field_id = $1`.
 
 ## Player (Devash)
-_To be added._
+
+Player routes are in `server/src/routes/player.js`, mounted behind
+`requireRole('player', 'organizer')`; organizers can use the same pages because
+they can also play. Every list passes `req.user.id` to `gameListSql`, and every
+write fixes `user_id` to `req.user.id` rather than accepting it from the body.
+Tests: `server/test/player.test.js`.
+
+### U1. My games: `GET /api/player/games`
+
+The default is upcoming games; `?when=past` switches to games that have kicked
+off. Optional `from`, `to`, `borough`, and `fieldId` filters are parameterized.
+The player's own row is required with an `EXISTS` condition, while the shared
+game-list query adds `my_registration` and `leave_closed` for the UI:
+
+```sql
+WHERE EXISTS (SELECT 1 FROM GameRegistration mine
+              WHERE mine.game_id = g.game_id AND mine.user_id = $1)
+  AND g.status = 'scheduled'
+  AND r.status IN ('approved', 'pending')
+  AND r.start_time > nyc_now();                 -- upcoming (default)
+```
+
+Past games use `r.start_time <= nyc_now()` and sort newest first. Upcoming games
+sort soonest first. A cancelled registration is retained, so the page can show
+that the player left instead of erasing the history.
+
+### U2. Search: `GET /api/player/search`
+
+Uses the same `gameSearchFilters()` and `gameListSql()` as the public search,
+with the logged-in player's id added as `viewerId`. Results therefore include
+the player's own registration and the current number of spots, which the page
+uses to show **Joined**, **Full**, **Join game**, or **Re-join**.
+
+### U3. Join: `POST /api/player/games/:id/join`
+
+One transaction first locks the game in its own statement:
+
+```sql
+SELECT game_id FROM PickupGame WHERE game_id = $1 FOR UPDATE;
+```
+
+Only after that lock is held does the conditional `INSERT` count active
+registrations and check that the game is scheduled, its booking is approved or
+pending, and kick-off is in the future. Two people trying for the last place
+wait on the same game row, so the second transaction recounts after the first
+commits and receives 409 **This game is full**. The concurrent case is tested.
+
+```sql
+INSERT INTO GameRegistration (game_id, user_id)
+SELECT g.game_id, $2
+FROM PickupGame g JOIN Reservation r ON r.reservation_id = g.reservation_id
+WHERE g.game_id = $1
+  AND g.status = 'scheduled'
+  AND r.status IN ('approved', 'pending')
+  AND r.start_time > nyc_now()
+  AND (SELECT COUNT(*) FROM GameRegistration x
+       WHERE x.game_id = g.game_id AND x.registration_status = 'registered') < g.max_players
+ON CONFLICT (game_id, user_id) DO UPDATE
+SET registration_status = 'registered', joined_at = nyc_now()
+WHERE GameRegistration.registration_status = 'cancelled';
+```
+
+The conflict update reuses the existing row when a player re-joins after
+leaving. A zero-row result is diagnosed as already joined, full, started,
+ended, or called off and returned as a readable 409.
+
+### U4. Leave: `POST /api/player/games/:id/leave`
+
+The rule is part of the conditional update, so it cannot be bypassed by calling
+the API directly. The update can only touch the logged-in player's row:
+
+```sql
+UPDATE GameRegistration x
+SET registration_status = 'cancelled'
+FROM PickupGame g, Reservation r
+WHERE x.game_id = $1 AND x.user_id = $2
+  AND x.registration_status = 'registered'
+  AND g.game_id = x.game_id AND r.reservation_id = g.reservation_id
+  AND g.status = 'scheduled' AND r.status IN ('approved', 'pending')
+  AND r.start_time > nyc_now() + INTERVAL '24 hours';
+```
+
+The row is cancelled, not deleted, preserving sign-up history and immediately
+opening the place for somebody else. U5 ratings and U6 activity are outside
+this implementation and remain to be added.
 
 ## Organizer (Jason)
 
@@ -462,4 +546,25 @@ Rosters show names only, never email addresses.
 Four counts in one query of scalar subqueries: bookings waiting for review, upcoming games, fields, and closures now or coming up.
 
 ### A5. Reports (Devash)
-_To be added._
+
+`GET /api/admin/reports?from=&to=` returns every A5 report in one response. A
+missing range means the year ending today; both ends are inclusive. The client
+also offers a past-month preset and a custom date range.
+
+- **Field usage hours:** sum the duration of approved, non-cancelled game
+  bookings in the range (`SUM(EXTRACT(EPOCH FROM (end_time-start_time))/3600)`).
+- **Bookings by month:** `generate_series` creates every month in the range,
+  including zero months, then a left join adds total and approved bookings for
+  the chart and table.
+- **By borough (Part 2 Q7):** fields, non-cancelled games, completed and
+  upcoming games, active sign-ups, and approved usage hours. `Field` stays on
+  the left so all five boroughs remain visible even with no games in the range.
+- **By format and skill level (Part 2 Q8):** one query with `GROUPING SETS`,
+  returning game count and average percentage of spots taken.
+- **Most active players (Part 2 Q5):** completed games with active
+  registrations, ranked with `RANK()`; everyone whose rank is at most five is
+  kept, including ties.
+
+The SQL is in `server/src/lib/adminReports.js`; tests are in
+`server/test/admin-reports.test.js`. Reports only read columns already granted
+to `soccer_app`, so no new database privilege was added.

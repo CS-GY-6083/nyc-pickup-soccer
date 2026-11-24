@@ -28,6 +28,10 @@ import {
   PENDING_BOOKINGS_SQL, REJECT_BOOKING_SQL, ROSTER_SQL,
 } from '../lib/admin.js';
 import {
+  ADMIN_REPORT_SUMMARY_SQL, BOOKINGS_BY_MONTH_SQL, GAMES_BY_BOROUGH_SQL,
+  GAMES_BY_FORMAT_SQL, MOST_ACTIVE_PLAYERS_SQL, REPORT_BOUNDS_SQL,
+} from '../lib/adminReports.js';
+import {
   BOROUGHS, SURFACES, checkDateOrder, containsPattern, optionalChoice, optionalDate,
   optionalId, optionalText, requireChoice, requireDateTime, requireId, requireNumber,
   requireText, requireTime,
@@ -268,6 +272,43 @@ router.get('/games/:id/players', async (req, res) => {
   if (game.rows.length === 0) throw new HttpError(404, 'That game does not exist.');
   const { rows } = await query(ROSTER_SQL, [id]);
   res.json({ players: rows });
+});
+
+// ---------------------------------------------------------------------
+// A5. Reports
+// ---------------------------------------------------------------------
+
+// GET /api/admin/reports?from=&to=
+// Missing dates mean the year ending today. The client offers last-month
+// and last-year presets, and can also send any inclusive custom range.
+router.get('/reports', async (req, res) => {
+  const requestedFrom = optionalDate(req.query.from, 'From date');
+  const requestedTo = optionalDate(req.query.to, 'To date');
+  checkDateOrder(requestedFrom, requestedTo);
+
+  const { rows: [bounds] } = await query(REPORT_BOUNDS_SQL, [requestedFrom, requestedTo]);
+  if (bounds.from_date > bounds.to_date) {
+    throw new HttpError(400, 'The start date must be on or before the end date.');
+  }
+  const params = [bounds.from_date, bounds.to_date];
+  const [summary, months, boroughs, breakdowns, players] = await Promise.all([
+    query(ADMIN_REPORT_SUMMARY_SQL, params),
+    query(BOOKINGS_BY_MONTH_SQL, params),
+    query(GAMES_BY_BOROUGH_SQL, params),
+    query(GAMES_BY_FORMAT_SQL, params),
+    query(MOST_ACTIVE_PLAYERS_SQL, params),
+  ]);
+
+  res.json({
+    from: bounds.from_date,
+    to: bounds.to_date,
+    summary: summary.rows[0],
+    months: months.rows,
+    boroughs: boroughs.rows,
+    formats: breakdowns.rows.filter((row) => row.grouped_by === 'format'),
+    skill_levels: breakdowns.rows.filter((row) => row.grouped_by === 'skill level'),
+    active_players: players.rows,
+  });
 });
 
 export default router;
