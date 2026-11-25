@@ -162,6 +162,21 @@ describe('toHttpError', () => {
     const err = Object.assign(new Error('invalid byte sequence'), { code: '22021' });
     assert.equal(toHttpError(err).status, 400);
   });
+  test('busy moments (locks, timeouts, deadlocks) ask the user to try again', () => {
+    for (const [code, status] of [['40001', 409], ['40P01', 409], ['55P03', 409], ['57014', 503], ['53300', 503]]) {
+      const result = toHttpError(Object.assign(new Error('x'), { code }));
+      assert.equal(result.status, status, code);
+      assert.match(result.message, /try again/i, code);
+    }
+  });
+  test('an unreachable database becomes a 503', () => {
+    for (const err of [
+      new Error('timeout exceeded when trying to connect'),
+      Object.assign(new Error('connect failed'), { code: 'ECONNREFUSED' }),
+    ]) {
+      assert.equal(toHttpError(err).status, 503, err.message);
+    }
+  });
   test('anything unexpected becomes a generic 500 without details', () => {
     const result = toHttpError(new Error('connection refused at 10.0.0.1'));
     assert.equal(result.status, 500);

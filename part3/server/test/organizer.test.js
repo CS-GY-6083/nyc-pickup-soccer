@@ -161,6 +161,39 @@ describe('O2. open slots and create a game', () => {
   });
 });
 
+describe('O2. booking limits', () => {
+  const body = (start, end) => ({ fieldId: 3, start, end, format: '5v5', skillLevel: 'all levels', maxPlayers: 12 });
+
+  test('refuses a kick-off more than 90 days ahead', async () => {
+    const res = await organizer.post('/organizer/games', body('2027-03-01T10:00', '2027-03-01T12:00'));
+    assert.equal(res.status, 400);
+    assert.match(res.data.error, /90 days ahead/);
+  });
+
+  test('refuses a new game while 10 bookings are already waiting for approval', async () => {
+    const { rows: [{ pending }] } = await query(
+      "SELECT COUNT(*) AS pending FROM Reservation WHERE user_id = 3 AND status = 'pending' AND start_time > nyc_now()",
+    );
+    const extra = [];
+    try {
+      for (let day = 1; pending + extra.length < 10; day += 1) {
+        const date = `2026-12-${String(day).padStart(2, '0')}`;
+        const { rows: [row] } = await query(
+          `INSERT INTO Reservation (user_id, field_id, start_time, end_time, status, requested_at)
+           VALUES (3, 5, $1, $2, 'pending', '2026-11-10 09:00') RETURNING reservation_id`,
+          [`${date} 07:00`, `${date} 08:00`],
+        );
+        extra.push(row.reservation_id);
+      }
+      const res = await organizer.post('/organizer/games', body('2026-11-30T10:00', '2026-11-30T12:00'));
+      assert.equal(res.status, 409, JSON.stringify(res.data));
+      assert.match(res.data.error, /10 games waiting/);
+    } finally {
+      if (extra.length) await query('DELETE FROM Reservation WHERE reservation_id = ANY($1)', [extra]);
+    }
+  });
+});
+
 describe('O3. complete or cancel a hosted game', () => {
   test('marks an approved game completed after kick-off', async () => {
     const fx = await makeHostedGame({

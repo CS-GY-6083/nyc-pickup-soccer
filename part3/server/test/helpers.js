@@ -40,14 +40,15 @@ export class Client {
   /**
    * Sends a request to /api<path>. Returns { status, data, headers }.
    * `params` become the query string (an array value repeats the key);
-   * `body` is sent as JSON; `rawBody` is sent as-is with a JSON content type.
+   * `body` is sent as JSON; `rawBody` is sent as-is with a JSON content type;
+   * `headers` are extra request headers (e.g. { origin: 'https://evil.example' }).
    */
-  async request(method, path, { params, body, rawBody } = {}) {
+  async request(method, path, { params, body, rawBody, headers: extra } = {}) {
     const url = new URL(`/api${path}`, this.baseUrl);
     for (const [key, value] of Object.entries(params ?? {})) {
       for (const v of [].concat(value)) url.searchParams.append(key, v);
     }
-    const headers = {};
+    const headers = { ...extra };
     if (this.cookie) headers.cookie = this.cookie;
     let payload;
     if (rawBody !== undefined || body !== undefined) {
