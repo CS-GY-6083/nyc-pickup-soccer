@@ -327,11 +327,65 @@ WHERE x.game_id = $1 AND x.user_id = $2
 The row is cancelled, not deleted, preserving sign-up history and immediately
 opening the place for somebody else.
 
-U5 (rate games) and U6 (my activity) are not built yet. The database side of U5
-already exists: the `GameRating` table and the `rating_eligible` trigger in
-`db/schema.sql`, and the `INSERT` / `UPDATE (rating, comment)` grants on
-`GameRating` in `db/roles.sql`. Devansh will add their sections here when they
-are built.
+### U5. Rate and comment: `GET /api/player/ratings`, `POST /api/player/games/:id/rating`
+
+The list query returns completed games for which the logged-in player still has
+an active registration, together with any rating already submitted. Its
+eligibility conditions match the database trigger:
+
+```sql
+SELECT g.game_id, f.name AS field_name, r.start_time,
+       gr.rating, gr.comment, gr.rated_at
+FROM GameRegistration x
+JOIN PickupGame g ON g.game_id = x.game_id
+JOIN Reservation r ON r.reservation_id = g.reservation_id
+JOIN Field f ON f.field_id = r.field_id
+LEFT JOIN GameRating gr ON gr.game_id = x.game_id AND gr.user_id = x.user_id
+WHERE x.user_id = $1
+  AND x.registration_status = 'registered'
+  AND r.status = 'approved' AND g.status <> 'cancelled'
+  AND (g.status = 'completed' OR r.end_time <= nyc_now())
+ORDER BY r.start_time DESC;
+```
+
+The POST validates a whole-number rating from 1–5 and an optional comment of at
+most 1,000 characters, then performs one parameterized insert:
+
+```sql
+INSERT INTO GameRating (game_id, user_id, rating, comment)
+VALUES ($1, $2, $3, $4)
+RETURNING game_id, user_id, rating, comment, rated_at;
+```
+
+`GameRating` has `(game_id, user_id)` as its primary key, so a player can rate
+each game once. The `rating_eligible` trigger independently refuses a future or
+cancelled game, a player who left, or somebody who never registered.
+
+### U6. My activity: `GET /api/player/activity`
+
+The summary counts games, playing hours and distinct fields in the inclusive
+report range. Missing dates mean the year ending today; custom ranges use the
+same validated, five-year-capped `resolveReportRange()` as O6 and A5.
+
+```sql
+SELECT COUNT(*) AS games_played,
+       ROUND(COALESCE(SUM(EXTRACT(EPOCH FROM (r.end_time - r.start_time)) / 3600), 0), 1) AS hours_played,
+       COUNT(DISTINCT r.field_id) AS fields_visited
+FROM GameRegistration x
+JOIN PickupGame g ON g.game_id = x.game_id
+JOIN Reservation r ON r.reservation_id = g.reservation_id
+WHERE x.user_id = $3
+  AND x.registration_status = 'registered'
+  AND r.status = 'approved' AND g.status <> 'cancelled'
+  AND (g.status = 'completed' OR r.end_time <= nyc_now())
+  AND r.start_time >= $1::date
+  AND r.start_time < $2::date + INTERVAL '1 day';
+```
+
+For the default report, `generate_series` creates the current calendar month
+and five preceding months. For a custom report it creates every month in the
+chosen range. A left join keeps zero-activity months in both the chart and the
+accessible table; each row contains `games_played` and `hours_played`.
 
 ## Organizer (Jason)
 
@@ -547,8 +601,9 @@ every completed game the player played with this organizer.
 
 ### O6. Reports: `GET /api/organizer/reports`
 
-The default range is the year ending today; `from` and `to` select an inclusive
-custom range of up to five years (`resolveReportRange` in
+The page offers Past year (the default), Past month and Custom presets. The
+Past month choice sends the date one month before today through today; `from`
+and `to` select an inclusive custom range of up to five years (`resolveReportRange` in
 `server/src/lib/reports.js`, shared with A5). `generate_series` returns every calendar month, including zeroes,
 and a left join adds the number of sign-up events and registrations that remain
 active. The page shows the totals plus an accessible monthly chart/table.
@@ -717,10 +772,15 @@ may be at most five years long (`resolveReportRange` in
 `server/src/lib/reports.js`, shared with O6). The client also offers a
 past-month preset and a custom date range.
 
-The route runs the five queries below at the same time, each with the same two
+The route runs the detail queries below at the same time, each with the same two
 parameters: `$1` = from date and `$2` = to date. "In the range" always means
 `r.start_time >= $1::date AND r.start_time < $2::date + INTERVAL '1 day'`, so
 the whole of the last day is included.
+
+It also always returns the last-month and last-year field-usage totals together,
+which is the free-soccer equivalent of the airline spec's revenue comparison.
+Those rolling periods are based on `nyc_now()` and do not change when the user
+selects a custom detail range.
 
 **Field usage hours (summary).** Sum the duration of approved, non-cancelled
 game bookings in the range, plus booking counts by status, in one pass with

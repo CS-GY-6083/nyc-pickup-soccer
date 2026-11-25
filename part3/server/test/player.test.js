@@ -1,4 +1,4 @@
-// Player use cases U1-U4. "Now" is frozen at 2026-11-14 12:00 in
+// Player use cases U1-U6. "Now" is frozen at 2026-11-14 12:00 in
 // test/fake-clock.sql. Fixtures are removed after the file finishes.
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -7,7 +7,7 @@ import { USERS, gameIds, query, startTestServer } from './helpers.js';
 let server;
 let player;
 let organizer;
-const created = { games: [], reservations: [], registrations: [] };
+const created = { games: [], reservations: [], registrations: [], ratings: [] };
 
 async function makeGame({ start, end, players = [], maxPlayers = 10, bookingStatus = 'approved' }) {
   const reviewed = bookingStatus === 'approved';
@@ -40,6 +40,9 @@ before(async () => {
 });
 
 after(async () => {
+  for (const [gameId, userId] of created.ratings) {
+    await query('DELETE FROM GameRating WHERE game_id = $1 AND user_id = $2', [gameId, userId]);
+  }
   for (const [gameId, userId] of created.registrations) {
     await query('DELETE FROM GameRegistration WHERE game_id = $1 AND user_id = $2', [gameId, userId]);
   }
@@ -50,11 +53,15 @@ after(async () => {
 
 describe('who can use player pages', () => {
   test('logged out and admins are refused; organizers may also play', async () => {
-    assert.equal((await server.client().get('/player/games')).status, 401);
+    for (const path of ['/player/games', '/player/ratings', '/player/activity']) {
+      assert.equal((await server.client().get(path)).status, 401);
+    }
     const admin = server.client();
     await admin.login(USERS.admin);
-    assert.equal((await admin.get('/player/games')).status, 403);
-    assert.equal((await organizer.get('/player/games')).status, 200);
+    for (const path of ['/player/games', '/player/ratings', '/player/activity']) {
+      assert.equal((await admin.get(path)).status, 403);
+      assert.equal((await organizer.get(path)).status, 200);
+    }
   });
 });
 
@@ -168,5 +175,70 @@ describe('U4. leave a game', () => {
 
   test('refuses a game the player never joined', async () => {
     assert.equal((await player.post('/player/games/16/leave')).status, 404);
+  });
+});
+
+describe('U5. rate a completed game', () => {
+  test('lists eligible games and their existing ratings', async () => {
+    const res = await player.get('/player/ratings');
+    assert.equal(res.status, 200);
+    assert.ok(res.data.games.length > 0);
+    assert.ok(res.data.games.every((game) => game.end_time <= '2026-11-14 12:00:00' || game.game_status === 'completed'));
+    assert.equal(res.data.games.find((game) => game.game_id === 1)?.rating, 5);
+    assert.equal(res.data.games.find((game) => game.game_id === 5)?.rating, 4);
+  });
+
+  test('saves one rating and comment, then refuses a duplicate', async () => {
+    const gameId = await makeGame({
+      start: '2026-11-13 18:00', end: '2026-11-13 20:00', players: [USERS.player.id],
+    });
+    const rated = await player.post(`/player/games/${gameId}/rating`, { rating: 3, comment: 'Competitive and friendly.' });
+    created.ratings.push([gameId, USERS.player.id]);
+    assert.equal(rated.status, 201, JSON.stringify(rated.data));
+    assert.equal(rated.data.rating.rating, 3);
+    assert.equal(rated.data.rating.comment, 'Competitive and friendly.');
+    assert.equal((await player.post(`/player/games/${gameId}/rating`, { rating: 4 })).status, 409);
+
+    const list = await player.get('/player/ratings');
+    assert.equal(list.data.games.find((game) => game.game_id === gameId)?.rating, 3);
+  });
+
+  test('checks rating input and database eligibility', async () => {
+    for (const rating of [0, 6, 2.5, 'great']) {
+      assert.equal((await player.post('/player/games/1/rating', { rating })).status, 400);
+    }
+    assert.equal((await player.post('/player/games/nope/rating', { rating: 4 })).status, 400);
+    assert.equal((await player.post('/player/games/12/rating', { rating: 4 })).status, 400, 'upcoming game');
+    assert.equal((await player.post('/player/games/999999/rating', { rating: 4 })).status, 400, 'not registered');
+    assert.equal((await player.post('/player/games/1/rating', { rating: 4, comment: 'x'.repeat(1001) })).status, 400);
+  });
+});
+
+describe('U6. my activity', () => {
+  test('returns a past-year total and the latest six calendar months', async () => {
+    const res = await player.get('/player/activity');
+    assert.equal(res.status, 200, JSON.stringify(res.data));
+    assert.equal(res.data.from, '2025-11-14');
+    assert.equal(res.data.to, '2026-11-14');
+    assert.equal(res.data.chart_months, 6);
+    assert.deepEqual(res.data.months.map((row) => row.month), [
+      '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11',
+    ]);
+    assert.ok(res.data.summary.games_played > 0);
+    assert.ok(res.data.summary.hours_played > 0);
+    assert.ok(res.data.summary.fields_visited > 0);
+  });
+
+  test('uses a custom inclusive range for totals and monthly rows', async () => {
+    const res = await player.get('/player/activity', { from: '2026-10-01', to: '2026-10-31' });
+    assert.equal(res.status, 200);
+    assert.equal(res.data.chart_months, 1);
+    assert.deepEqual(res.data.months.map((row) => row.month), ['2026-10']);
+    assert.ok(res.data.months[0].games_played > 0);
+    assert.ok(res.data.months[0].hours_played > 0);
+
+    assert.equal((await player.get('/player/activity', { from: '2026-12-01', to: '2026-11-01' })).status, 400);
+    assert.equal((await player.get('/player/activity', { from: 'not-a-date' })).status, 400);
+    assert.equal((await player.get('/player/activity', { from: '2021-11-13', to: '2026-11-14' })).status, 400);
   });
 });

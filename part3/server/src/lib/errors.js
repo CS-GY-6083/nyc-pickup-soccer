@@ -28,6 +28,7 @@ const CONSTRAINT_MESSAGES = {
   chk_field_in_nyc: 'Field coordinates must be inside New York City (latitude 40.49 to 40.92, longitude -74.27 to -73.68).',
   chk_rating_range: 'A rating must be between 1 and 5 stars.',
   chk_rating_eligible: 'You can only rate games you played that have finished.',
+  gamerating_pkey: 'You already rated this game.',
 };
 
 // PostgreSQL error codes: https://www.postgresql.org/docs/17/errcodes-appendix.html

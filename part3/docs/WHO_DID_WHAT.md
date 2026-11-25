@@ -9,8 +9,8 @@ Team: Abhinav Sivakumar (as21153), Devansh Vikram (dv2482), Jason Parmar (jsp928
 | Member | Use cases | Pull requests |
 |---|---|---|
 | Abhinav | Infrastructure; public pages P1–P7; admin A1–A4; the delayed status (O3); robustness and security; hosting | #1, #4, #5, #6, #7, and the early commits on `main` |
-| Jason | Organizer O1–O6 | #2 (branch `dev_jason_task`) |
-| Devansh | Player U1–U4; admin reports A5; U5 and U6 to come | #3 (branch `codex/devansh-player-reports`) |
+| Jason | Organizer O1–O6; final integration for U5, U6 and the A5 month/year comparison | #2 (`dev_jason_task`), #9 (`dev_jason_followup`) |
+| Devansh | Player U1–U4; initial admin reports A5 | #3 (branch `codex/devansh-player-reports`) |
 
 Pull requests are squash-merged, so each one shows up as a single commit on `main`, whatever its size. That is why the commit counts look uneven: Jason's and Devansh's work arrived as one pull request each. The diffs below give a better picture of how much each person wrote.
 
@@ -54,21 +54,24 @@ Pull requests are squash-merged, so each one shows up as a single commit on `mai
 
 ## Jason
 
-PR #2, "implement organizer use cases".
+PR #2, "implement organizer use cases", plus the final integration follow-up in PR #9.
 
 - **O1** My hosted games, with rosters.
 - **O2** Create a game from a field's open slots (Part 2 Q9). The booking and the game are created in one transaction.
 - **O3** Complete or cancel a game, locking the booking before the game.
 - **O4** Ratings: the average per game and every comment.
 - **O5** Frequent players in the past year, and all games one player played with this organizer.
-- **O6** Sign-up reports by month.
+- **O6** Sign-up reports by month for the past year, past month or a custom date range.
 - **Files:**
   - `server/src/lib/organizer.js`, `server/src/routes/organizer.js`;
   - `client/src/pages/organizer/` (Hosted games, Create game, Ratings, Frequent players, Reports);
   - `server/test/organizer.test.js` (17 tests in the PR);
   - the organizer section of `USE_CASES.md`.
 - **Also:** set up the GitHub organization and repository.
-- **To do:** the "Last month" preset on Reports (spec Staff 8).
+- **Follow-up:** added the "Past month" preset on Reports (spec Staff 8).
+- **Final integration follow-up:** completed U5 ratings, U6 activity, the A5
+  month/year comparison, their React pages and API tests; added the
+  cross-platform PostgreSQL test launcher and reconciled the hand-in docs.
 
 ## Devansh
 
@@ -89,10 +92,9 @@ PR #3, "implement player flows and admin reports".
   - `client/src/pages/player/PlayerGames.jsx`, `PlayerSearch.jsx`, `client/src/pages/admin/AdminReports.jsx`;
   - `server/test/player.test.js`, `server/test/admin-reports.test.js`;
   - the player and A5 sections of `USE_CASES.md`.
-- **To do:**
-  - U5 rate games;
-  - U6 my activity;
-  - show the last-month and last-year totals together on A5 (spec Staff 9).
+- **Initial A5 implementation:** the detail-range report, monthly bookings,
+  borough/format/skill breakdowns and active-player ranking. The later final
+  integration added the simultaneous month/year comparison.
 
 ## Together
 

@@ -1,22 +1,30 @@
-// O6. Organizer sign-up report for the past year or a custom date range.
+// O6. Organizer sign-up report for the past year, past month, or a custom range.
 // Owner: Jason
 import { useEffect, useState } from 'react';
-import { BarChart3, RotateCcw } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { api } from '../../api.js';
 import MonthlyBarChart from '../../components/MonthlyBarChart.jsx';
-import { Button, CARD, Icon, Notice, Page, Skeleton, StatTile, TextField } from '../../components/v2/index.js';
-import { formatDate } from '../../format.js';
+import { Button, CARD, Icon, Notice, Page, Segmented, Skeleton, StatTile, TextField } from '../../components/v2/index.js';
+import { formatDate, todayInNewYork } from '../../format.js';
 import { cn } from '../../lib/utils.js';
 
-const EMPTY = { from: '', to: '' };
+function shiftDate(iso, { months = 0, years = 0 }) {
+  const [year, month, day] = iso.split('-').map(Number);
+  const monthIndex = (year - years) * 12 + (month - 1) - months;
+  const targetYear = Math.floor(monthIndex / 12);
+  const targetMonth = ((monthIndex % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(targetYear, targetMonth, Math.min(day, lastDay))).toISOString().slice(0, 10);
+}
 
 export default function OrganizerReports() {
-  const [form, setForm] = useState(EMPTY);
-  const [filters, setFilters] = useState(EMPTY);
+  const today = todayInNewYork();
+  const [period, setPeriod] = useState('year');
+  const [custom, setCustom] = useState({ from: shiftDate(today, { months: 1 }), to: today });
+  const [filters, setFilters] = useState({});
   const [report, setReport] = useState(null);
   const [error, setError] = useState('');
-  const set = (key) => (event) => setForm((old) => ({ ...old, [key]: event.target.value }));
-  const rangeError = form.from && form.to && form.from > form.to ? 'The start date must be on or before the end date.' : '';
+  const rangeError = custom.from && custom.to && custom.from > custom.to ? 'The start date must be on or before the end date.' : '';
 
   useEffect(() => {
     let live = true;
@@ -26,23 +34,35 @@ export default function OrganizerReports() {
     return () => { live = false; };
   }, [filters]);
 
-  function submit(event) {
+  function choosePeriod(value) {
+    setPeriod(value);
+    if (value === 'year') setFilters({});
+    if (value === 'month') setFilters({ from: shiftDate(today, { months: 1 }), to: today });
+    if (value === 'custom') setFilters(custom);
+  }
+
+  function applyCustom(event) {
     event.preventDefault();
-    if (!rangeError) setFilters(form);
+    if (!rangeError) setFilters(custom);
   }
 
   return (
-    <Page title="Organizer reports" lede="How many people signed up for your games, month by month. The default period is the past year.">
-      <form onSubmit={submit} className={cn(CARD, 'mb-8 flex flex-col gap-4')}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextField label="From" type="date" value={form.from} onChange={set('from')} />
-          <TextField label="To" type="date" min={form.from || undefined} value={form.to} onChange={set('to')} error={rangeError} />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit"><Icon icon={BarChart3} tone="label" size="18px" />Build report</Button>
-          {Object.values(filters).some(Boolean) && <Button variant="quiet" onClick={() => { setForm(EMPTY); setFilters(EMPTY); }}><Icon icon={RotateCcw} tone="label" size="16px" />Past year</Button>}
-        </div>
-      </form>
+    <Page title="Organizer reports" lede="How many people signed up for your games, month by month, for the past year, past month, or any date range.">
+      <div className={cn(CARD, 'mb-8')}>
+        <Segmented
+          legend="Reporting period"
+          value={period}
+          onChange={choosePeriod}
+          options={[["year", "Past year"], ["month", "Past month"], ["custom", "Custom"]]}
+        />
+        {period === 'custom' && (
+          <form onSubmit={applyCustom} className="mt-4 flex flex-wrap items-start gap-3">
+            <TextField label="From" type="date" value={custom.from} onChange={(event) => setCustom((value) => ({ ...value, from: event.target.value }))} />
+            <TextField label="To" type="date" min={custom.from || undefined} value={custom.to} onChange={(event) => setCustom((value) => ({ ...value, to: event.target.value }))} error={rangeError} />
+            <Button type="submit" className="mt-[26px]" disabled={Boolean(rangeError)}><Icon icon={BarChart3} tone="label" size="18px" />Build report</Button>
+          </form>
+        )}
+      </div>
       {error && <Notice type="error">{error}</Notice>}
       {!report && !error && <Skeleton rows={4} label="Loading report" />}
       {report && (

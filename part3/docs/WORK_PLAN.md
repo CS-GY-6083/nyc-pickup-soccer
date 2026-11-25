@@ -37,8 +37,8 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
 | U2 | Search upcoming games | Search for flights | Done |
 | U3 | Join a game: capacity check with row lock (Part 2 Q11); re-join after leaving | Purchase ticket | Done |
 | U4 | Leave a game more than 24h before kickoff; the spot opens up again | Cancel trip | Done |
-| U5 | Rate (1–5) and comment on completed games they played | Rate and comment | To do |
-| U6 | My activity: total for the past year + monthly bar chart for the last 6 months; custom date range | Track my spending | To do |
+| U5 | Rate (1–5) and comment on completed games they played | Rate and comment | Done |
+| U6 | My activity: total for the past year + monthly bar chart for the last 6 months; custom date range | Track my spending | Done |
 
 ### Organizer (Jason)
 | # | Use case | Course equivalent | Status |
@@ -66,7 +66,7 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
   - Organizer queries always filter `g.organizer_id = req.user.id`; another organizer's game id gives 404.
   - Player actions only touch `user_id = req.user.id`.
   - Organizers can use all four player pages, since they also play.
-- **Tests:** `npm test` in `server/` (210 tests so far: login, sessions, role guards, search, status, the field finder and field page, the admin use cases A1–A5, the player use cases U1–U4, the organizer use cases O1–O6, the database roles, the delayed status, report ranges, errors, sessions, cross-site checks and health, the NYC Open Data field import, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
+- **Tests:** `npm test` in `server/` (215 tests: login, sessions, role guards, search, status, the field finder and field page, the admin use cases A1–A5, the player use cases U1–U6, the organizer use cases O1–O6, the database roles, delayed status, report ranges, errors, cross-site checks and health, the NYC Open Data field import, the rating rule and the date shift). The cross-platform launcher rebuilds only `nyc_fields_test`, so it works in VS Code PowerShell without touching development data. Each owner adds tests for the happy path, bad input, the wrong role, and someone else's data. Run `npm test` before every push.
 - Docs: each owner writes their own section of `USE_CASES.md`.
 
 ## Hosting (Vercel + Neon)
@@ -102,8 +102,8 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
 - [ ] Work plan: this file. The spec asks teams to submit one "indicating who will do what".
 - [ ] Source code (client + server + db scripts + tests)
 - [ ] Database backup "including table structures and inserted data": `pg_dump --no-owner --exclude-table-data=session nyc_fields > part3/backup/nyc_fields.sql` Script ready: `db/backup.sh` (tested: restores with identical row counts). Run it on the live database on Dec 7.
-- [x] `docs/FILES.md`: every file and what it does (draft done Nov 25; update after U5/U6)
-- [ ] `docs/USE_CASES.md`: every use case and the queries it runs, with a short explanation (all built use cases have their SQL; U5/U6 to add)
+- [x] `docs/FILES.md`: every file and what it does (updated after U5/U6 on Nov 25)
+- [x] `docs/USE_CASES.md`: every use case and the queries it runs, with a short explanation
 - [x] A table mapping each spec (airline) use case to our feature. The professor's demo test cases are written for airlines, and we are "responsible for translating" them. Done: `docs/SPEC_MAPPING.md`.
 - [ ] `docs/WHO_DID_WHAT.md` (draft done Nov 25; each member checks their section)
 - [ ] "An evaluation at the end" (listed with the deliverables; ask the professor what format is expected) Draft: `docs/EVALUATION.md`.

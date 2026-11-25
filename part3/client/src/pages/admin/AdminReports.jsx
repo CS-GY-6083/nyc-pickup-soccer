@@ -90,6 +90,24 @@ export default function AdminReports() {
             {formatDate(report.from)} through {formatDate(report.to)}
           </p>
 
+          <section aria-labelledby="usage-comparison">
+            <h2 id="usage-comparison" className="mb-4 font-display text-[24px] font-bold">Past month and past year</h2>
+            <dl className="grid gap-3 sm:grid-cols-2">
+              <StatTile
+                label="Past month field usage"
+                value={`${report.comparison.last_month_usage_hours} h`}
+                icon={Clock3}
+                note={`${report.comparison.last_month_bookings} booking requests`}
+              />
+              <StatTile
+                label="Past year field usage"
+                value={`${report.comparison.last_year_usage_hours} h`}
+                icon={Clock3}
+                note={`${report.comparison.last_year_bookings} booking requests`}
+              />
+            </dl>
+          </section>
+
           <dl className="grid grid-cols-2 gap-3 lg:grid-cols-5">
             <StatTile label="Field usage" value={`${report.summary.field_usage_hours} h`} icon={Clock3} note="Approved, non-cancelled bookings" />
             <StatTile label="Bookings" value={report.summary.bookings} icon={CalendarDays} note="All booking requests" />

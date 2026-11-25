@@ -2,13 +2,15 @@
 
 CS-GY 6083, Fall 2026. Abhinav Sivakumar (as21153), Devansh Vikram (dv2482), Jason Parmar (jsp9287).
 
-React (Vite) front end, Node/Express JSON API, PostgreSQL 17. Who builds what, and when: [docs/WORK_PLAN.md](docs/WORK_PLAN.md). Latest status for the team: [docs/TEAM_UPDATE.md](docs/TEAM_UPDATE.md).
+React (Vite) front end, Node/Express JSON API, PostgreSQL 17+. Who builds what, and when: [docs/WORK_PLAN.md](docs/WORK_PLAN.md). Latest status for the team: [docs/TEAM_UPDATE.md](docs/TEAM_UPDATE.md).
 
 Hand-in documents: [use cases and their queries](docs/USE_CASES.md), [every file](docs/FILES.md), [airline spec → our app](docs/SPEC_MAPPING.md), [schema and ER diagram](docs/SCHEMA.md), [who did what](docs/WHO_DID_WHAT.md), [evaluation](docs/EVALUATION.md), [demo script](docs/DEMO.md). Database backup: `db/backup.sh`.
 
 ## Run it locally
 
-You need Node 22+ and PostgreSQL 17 running locally.
+You need Node 22+ and PostgreSQL 17 or newer running locally. On Windows,
+the normal PostgreSQL installer is enough; the commands below work in the
+VS Code PowerShell terminal.
 
 ```bash
 # 1. Database: creates nyc_fields if needed, then (re)loads every table and the sample data.
@@ -18,7 +20,9 @@ part3/db/reset.sh
 
 # 2. API server on http://localhost:3001 (restarts when you save a file)
 cd part3/server
-cp .env.example .env          # first time only; set SESSION_SECRET to any long random string
+cp .env.example .env          # first time only
+# Edit .env: add your PostgreSQL username/password to DATABASE_URL and set
+# SESSION_SECRET to any long random string. URL-encode @ in a password as %40.
 npm install                   # first time only
 npm run dev
 
@@ -37,6 +41,10 @@ cd part3/server
 npm test               # rebuilds the test database nyc_fields_test, then runs every test in test/
 npm run test:coverage  # same, plus a coverage report (fails below 80%)
 ```
+
+The test launcher reads the owner credentials from `server/.env`, rebuilds
+only `nyc_fields_test`, and runs the API queries as the restricted
+`soccer_app` role. It never empties the development database `nyc_fields`.
 
 The tests use their own database (`nyc_fields_test`) with the clock frozen at 2026-11-14 12:00 (`test/fake-clock.sql`), so they give the same results on any day and never touch your dev data. `test/helpers.js` starts the app and gives you a client that keeps a login session:
 

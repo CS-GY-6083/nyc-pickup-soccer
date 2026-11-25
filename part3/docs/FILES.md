@@ -32,8 +32,8 @@ This lists every file in `part3/`, the NYC Pickup Soccer web app (React + Expres
 
 | File | What it is |
 |---|---|
-| `server/package.json` | Server dependencies (Express 5, express-session, connect-pg-simple, pg) and the `dev`, `start`, `test` and `test:coverage` scripts. |
-| `server/.env.example` | Template for `server/.env` with `DATABASE_URL`, `SESSION_SECRET` and `PORT`. |
+| `server/package.json` | Server dependencies (Express 5, express-session, connect-pg-simple, pg) and the `dev`, `start`, cross-platform `test` and `test:coverage` scripts. |
+| `server/.env.example` | Template for the git-ignored `server/.env`, including a credential-bearing local PostgreSQL URL, reserved-character guidance, `SESSION_SECRET` and `PORT`. |
 
 ## `server/src/`
 
@@ -50,10 +50,10 @@ This lists every file in `part3/`, the NYC Pickup Soccer web app (React + Expres
 | `server/src/lib/games.js` | Shared game-list SQL used by P1, P2, U1, U2, O1 and A4: the `Where` builder for parameterized conditions, `gameListSql()`, the `UPCOMING` condition and `gameSearchFilters()`. |
 | `server/src/lib/fields.js` | SQL and input checks for the field finder (P6: filters, game counts, distance and sorting in SQL) and the field page (P7: field details and closures) (Abhinav). |
 | `server/src/lib/admin.js` | SQL for A1–A4: the pending-booking queue with conflict checks (Part 2 Q2), approve and reject, fields and hours, closures, rosters and the admin home summary (Abhinav). |
-| `server/src/lib/adminReports.js` | SQL for the A5 reports: field-usage hours, bookings per month, games by borough and by format, and the most active players (Devansh). |
+| `server/src/lib/adminReports.js` | SQL for the A5 reports: field-usage hours, simultaneous last-month/last-year totals, bookings per month, games by borough and by format, and the most active players. |
 | `server/src/lib/organizer.js` | SQL for O1–O6: rosters, open slots and create-game checks, complete/cancel/delayed updates, ratings, frequent players and sign-up reports, plus the 90-day and 10-pending booking limits (Jason). |
-| `server/src/lib/player.js` | SQL for U3 join (lock the game row, then a capacity-checked insert or re-join) and U4 leave (only more than 24 hours before kickoff) (Devansh). |
-| `server/src/lib/reports.js` | `resolveReportRange()`, which turns optional from/to dates into a report date range (default: the past year; at most five years) for O6 and A5. |
+| `server/src/lib/player.js` | SQL for U3 join, U4 leave, U5 eligible games/rating insert and U6 activity totals/monthly rows. |
+| `server/src/lib/reports.js` | `resolveReportRange()`, which turns optional from/to dates into a report date range (default: the past year; at most five years) for U6, O6 and A5. |
 | `server/src/lib/validate.js` | Server-side input checks (required text, dates, times, ids, numbers, and allowed values such as boroughs and formats) that throw a 400 error with a readable message. |
 | `server/src/lib/errors.js` | The `HttpError` class and `toHttpError()`, which turns database constraint, timeout and connection errors into readable 4xx/5xx messages. |
 
@@ -63,7 +63,7 @@ This lists every file in `part3/`, the NYC Pickup Soccer web app (React + Expres
 |---|---|
 | `server/src/routes/auth.js` | `/api/auth`: register as a player or organizer (P3), log in with an `md5` password check (P4), log out and destroy the session (P5), and `me` for the current user (Abhinav). |
 | `server/src/routes/public.js` | `/api/public`, open to everyone: field finder (P6), field page (P7), game search (P1) and game status by game number or by field and date (P2) (Abhinav). |
-| `server/src/routes/player.js` | `/api/player`, for players and organizers: my games (U1), search (U2), join (U3) and leave (U4) (Devansh). |
+| `server/src/routes/player.js` | `/api/player`, for players and organizers: my games (U1), search (U2), join (U3), leave (U4), ratings (U5) and activity reports (U6). |
 | `server/src/routes/organizer.js` | `/api/organizer`: hosted games and rosters (O1), open slots and create game (O2), complete, cancel, delayed or back on time (O3), ratings (O4), frequent players (O5) and reports (O6) (Jason). |
 | `server/src/routes/admin.js` | `/api/admin`: home summary, approve or reject bookings (A1), fields (A2), closures (A3), all games and rosters (A4) (Abhinav), and reports (A5, Devansh). |
 | `server/src/routes/ops.js` | `/api/health` (checks the database) and `/api/cron/prune-sessions`, the daily Vercel Cron job that deletes expired login sessions. |
@@ -84,11 +84,12 @@ Run with `npm test` in `server/`. The tests use their own database (`nyc_fields_
 | `server/test/helpers.js` | Starts the app on a random port against the test database and provides a client that keeps a login session, the sample users and fixture helpers. |
 | `server/test/owner-db.js` | A connection pool as the test database's owner, for creating fixtures and for testing database rules the app role may not touch. |
 | `server/test/fake-clock.sql` | Replaces `nyc_now()` in the test database with a fixed time (2026-11-14 12:00) so the tests give the same results on any day. |
+| `server/test/run.mjs` | Cross-platform test launcher: rebuilds only `nyc_fields_test` with the owner URL from `.env`, loads the fixed clock, and runs the API as `soccer_app`. |
 | `server/test/auth.test.js` | Tests for register, login, sessions and logout (P3–P5). |
 | `server/test/public.test.js` | Tests for public game search and game status (P1, P2), including the viewer's own sign-up labels. |
 | `server/test/fields.test.js` | Tests for the field finder and the field page (P6, P7). |
 | `server/test/guards.test.js` | Tests that each role can reach only its own API area, that the role is re-read from the database on every request, and that unknown paths return a JSON 404. |
-| `server/test/player.test.js` | Tests for U1–U4 and for who may use the player endpoints. |
+| `server/test/player.test.js` | Tests for U1–U6 and for who may use the player endpoints. |
 | `server/test/organizer.test.js` | Tests for O1–O6, including the booking limits and the delayed / back on time status. |
 | `server/test/admin.test.js` | Tests for A1–A4 and the admin home summary. |
 | `server/test/admin-reports.test.js` | Tests for the A5 admin reports. |
@@ -121,7 +122,7 @@ Run with `npm test` in `server/`. The tests use their own database (`nyc_fields_
 | File | What it is |
 |---|---|
 | `client/src/main.jsx` | Entry point: loads the fonts and styles and renders `<App>` inside the router and the `AuthProvider`. |
-| `client/src/App.jsx` | Every route in the app and which roles may open it; the U5 and U6 routes still show the `ComingSoon` placeholder. |
+| `client/src/App.jsx` | Every route in the app and which roles may open it. |
 | `client/src/api.js` | `api()`, the one helper for calling the Express API, which throws an `ApiError` carrying the server's readable message. |
 | `client/src/constants.js` | Allowed boroughs, surfaces, formats and skill levels, matching the CHECK constraints in `db/schema.sql`. |
 | `client/src/format.js` | Formats the API's New York local-time timestamps as dates, times, slots and months without browser time-zone shifts. |
@@ -141,7 +142,7 @@ Run with `npm test` in `server/`. The tests use their own database (`nyc_fields_
 | `client/src/components/NavBar.jsx` | Site navigation: a top bar on wide screens and a bottom tab bar with an account sheet on phones, with login/logout links and the theme toggle. |
 | `client/src/components/Flash.jsx` | The success/error banner shown when an action returns to the home page, plus the `useGoHome()` hook and the inline `Message` component. |
 | `client/src/components/UseCaseMenu.jsx` | Grid of links to a role's use cases, shown on each home page. |
-| `client/src/components/MonthlyBarChart.jsx` | Month-by-month bar chart (Recharts) with the same numbers in a table, used by the O6 and A5 reports. |
+| `client/src/components/MonthlyBarChart.jsx` | Month-by-month bar chart (Recharts) with the same numbers in a table, used by the U6, O6 and A5 reports. |
 | `client/src/components/ThemeToggle.jsx` | Light / system / dark theme switch in the navigation. |
 | `client/src/components/GameSearchForm.jsx` | Older game search form (borough, field, one day or date range, format, level) that no page imports any more. |
 | `client/src/components/GameTable.jsx` | Older table of games returned by `gameListSql()` that no page imports any more. |
@@ -213,7 +214,7 @@ Run with `npm test` in `server/`. The tests use their own database (`nyc_fields_
 
 | File | What it is |
 |---|---|
-| `client/src/pages/ComingSoon.jsx` | Placeholder page for use cases not built yet, currently shown for U5 (rate past games) and U6 (my activity). |
+| `client/src/pages/ComingSoon.jsx` | Generic placeholder retained for a future route; no current route uses it. |
 | `client/src/pages/NotFound.jsx` | Page shown for any address the app does not know. |
 
 ## `client/src/pages/public/`
@@ -237,6 +238,8 @@ Run with `npm test` in `server/`. The tests use their own database (`nyc_fields_
 | `client/src/pages/player/playerUseCases.js` | The player menu entries (U1, U2/U3, U5, U6), shared with the organizer home page. |
 | `client/src/pages/player/PlayerGames.jsx` | U1: my upcoming or past games with date, borough and field filters, and U4: leave a game (Devansh). |
 | `client/src/pages/player/PlayerSearch.jsx` | U2: search upcoming games, and U3: join or re-join one (Devansh). |
+| `client/src/pages/player/PlayerRatings.jsx` | U5: eligible completed games, existing ratings, and the 1–5-star/comment submission form. |
+| `client/src/pages/player/PlayerActivity.jsx` | U6: past-year or custom totals, six-month/default or custom monthly chart, and hours table. |
 
 ## `client/src/pages/organizer/`
 
@@ -247,7 +250,7 @@ Run with `npm test` in `server/`. The tests use their own database (`nyc_fields_
 | `client/src/pages/organizer/CreateGame.jsx` | O2: pick a field, day and open slot, then create the pending booking and its game; also lists my games in the next 30 days (Jason). |
 | `client/src/pages/organizer/OrganizerRatings.jsx` | O4: the average rating and every comment for each hosted game (Jason). |
 | `client/src/pages/organizer/FrequentPlayers.jsx` | O5: the players who played in my games most in the last year, and the games each one played (Jason). |
-| `client/src/pages/organizer/OrganizerReports.jsx` | O6: sign-up totals and a monthly bar chart for the past year or a chosen date range (Jason). |
+| `client/src/pages/organizer/OrganizerReports.jsx` | O6: sign-up totals and a monthly bar chart with Past year, Past month and custom date-range choices (Jason). |
 
 ## `client/src/pages/admin/`
 
@@ -258,7 +261,7 @@ Run with `npm test` in `server/`. The tests use their own database (`nyc_fields_
 | `client/src/pages/admin/AdminFields.jsx` | A2: add a field with its opening hours, then a list of every field as the confirmation (Abhinav). |
 | `client/src/pages/admin/AdminClosures.jsx` | A3: add a field closure and see the scheduled games it overlaps, plus the list of closures (Abhinav). |
 | `client/src/pages/admin/AdminGames.jsx` | A4: every game and booking in any status, with filters and each game's roster (Abhinav). |
-| `client/src/pages/admin/AdminReports.jsx` | A5: field-usage hours, bookings per month, games by borough and by format, and the most active players for the past year, past month or a chosen range (Devansh). |
+| `client/src/pages/admin/AdminReports.jsx` | A5: last-month and last-year usage totals together, plus range-specific field usage, bookings, borough/format/skill breakdowns and active players. |
 
 ## `design/`: design tokens and photo tools (not loaded by the app)
 

@@ -19,6 +19,7 @@
 //                                            spot at once safe. Only list a game as joinable if it matches UPCOMING.
 //   POST   /api/player/games/:id/leave    4. Leave (spec: cancel trip): only if kickoff is more than 24 hours away;
 //                                            UPDATE GameRegistration SET registration_status = 'cancelled'
+//   GET    /api/player/ratings            5. Finished games this player may rate, plus existing ratings
 //   POST   /api/player/games/:id/rating   5. Rate + comment a game they played (INSERT INTO GameRating). The trigger
 //                                            in db/schema.sql refuses games that are not over or that the player left
 //                                            (error chk_rating_eligible, already a readable 400); a second rating is 409.
@@ -29,10 +30,14 @@ import { query, withTransaction } from '../db.js';
 import { HttpError } from '../lib/errors.js';
 import { Where, UPCOMING, gameListSql, gameSearchFilters } from '../lib/games.js';
 import {
-  JOIN_GAME_SQL, JOIN_STATUS_SQL, LEAVE_GAME_SQL, LOCK_GAME_FOR_JOIN_SQL, PLAYER_GAME_STATUS_SQL,
+  JOIN_GAME_SQL, JOIN_STATUS_SQL, LEAVE_GAME_SQL, LOCK_GAME_FOR_JOIN_SQL,
+  PLAYER_ACTIVITY_MONTHS_SQL, PLAYER_ACTIVITY_SUMMARY_SQL, PLAYER_GAME_STATUS_SQL,
+  PLAYER_RATINGS_SQL, RATE_GAME_SQL,
 } from '../lib/player.js';
+import { resolveReportRange } from '../lib/reports.js';
 import {
-  BOROUGHS, checkDateOrder, optionalChoice, optionalDate, optionalId, requireId,
+  BOROUGHS, checkDateOrder, optionalChoice, optionalDate, optionalId, optionalText,
+  requireId, requireNumber,
 } from '../lib/validate.js';
 
 const router = Router();
@@ -125,6 +130,40 @@ router.post('/games/:id/leave', async (req, res) => {
     throw leaveFailure(status.rows[0]);
   }
   res.json({ registration: left.rows[0], message: `You left game #${gameId}.` });
+});
+
+// GET /api/player/ratings
+router.get('/ratings', async (req, res) => {
+  const { rows } = await query(PLAYER_RATINGS_SQL, [req.user.id]);
+  res.json({ games: rows });
+});
+
+// POST /api/player/games/:id/rating
+router.post('/games/:id/rating', async (req, res) => {
+  const gameId = requireId(req.params.id, 'Game');
+  const rating = requireNumber(req.body?.rating, 'Rating', { min: 1, max: 5 });
+  if (!Number.isInteger(rating)) throw new HttpError(400, 'Rating must be a whole number from 1 to 5.');
+  const comment = optionalText(req.body?.comment, 'Comment', 1000);
+  const { rows: [saved] } = await query(RATE_GAME_SQL, [gameId, req.user.id, rating, comment]);
+  res.status(201).json({ rating: saved, message: `You rated game #${gameId}.` });
+});
+
+// GET /api/player/activity?from=&to=
+router.get('/activity', async (req, res) => {
+  const defaultRange = !req.query.from && !req.query.to;
+  const bounds = await resolveReportRange(req.query.from, req.query.to);
+  const params = [bounds.from, bounds.to, req.user.id];
+  const [summary, months] = await Promise.all([
+    query(PLAYER_ACTIVITY_SUMMARY_SQL, params),
+    query(PLAYER_ACTIVITY_MONTHS_SQL, [...params, defaultRange]),
+  ]);
+  res.json({
+    from: bounds.from,
+    to: bounds.to,
+    chart_months: defaultRange ? 6 : months.rows.length,
+    summary: summary.rows[0],
+    months: months.rows,
+  });
 });
 
 export default router;

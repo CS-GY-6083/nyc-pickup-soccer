@@ -28,7 +28,7 @@ import {
   PENDING_BOOKINGS_SQL, REJECT_BOOKING_SQL, ROSTER_SQL,
 } from '../lib/admin.js';
 import {
-  ADMIN_REPORT_SUMMARY_SQL, BOOKINGS_BY_MONTH_SQL, GAMES_BY_BOROUGH_SQL,
+  ADMIN_PERIOD_COMPARISON_SQL, ADMIN_REPORT_SUMMARY_SQL, BOOKINGS_BY_MONTH_SQL, GAMES_BY_BOROUGH_SQL,
   GAMES_BY_FORMAT_SQL, MOST_ACTIVE_PLAYERS_SQL,
 } from '../lib/adminReports.js';
 import { resolveReportRange } from '../lib/reports.js';
@@ -286,8 +286,9 @@ router.get('/games/:id/players', async (req, res) => {
 router.get('/reports', async (req, res) => {
   const bounds = await resolveReportRange(req.query.from, req.query.to);
   const params = [bounds.from, bounds.to];
-  const [summary, months, boroughs, breakdowns, players] = await Promise.all([
+  const [summary, comparison, months, boroughs, breakdowns, players] = await Promise.all([
     query(ADMIN_REPORT_SUMMARY_SQL, params),
+    query(ADMIN_PERIOD_COMPARISON_SQL),
     query(BOOKINGS_BY_MONTH_SQL, params),
     query(GAMES_BY_BOROUGH_SQL, params),
     query(GAMES_BY_FORMAT_SQL, params),
@@ -298,6 +299,7 @@ router.get('/reports', async (req, res) => {
     from: bounds.from,
     to: bounds.to,
     summary: summary.rows[0],
+    comparison: comparison.rows[0],
     months: months.rows,
     boroughs: boroughs.rows,
     formats: breakdowns.rows.filter((row) => row.grouped_by === 'format'),
