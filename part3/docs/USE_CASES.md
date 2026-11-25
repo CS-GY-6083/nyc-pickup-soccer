@@ -325,8 +325,13 @@ WHERE x.game_id = $1 AND x.user_id = $2
 ```
 
 The row is cancelled, not deleted, preserving sign-up history and immediately
-opening the place for somebody else. U5 ratings and U6 activity are outside
-this implementation and remain to be added.
+opening the place for somebody else.
+
+U5 (rate games) and U6 (my activity) are not built yet. The database side of U5
+already exists: the `GameRating` table and the `rating_eligible` trigger in
+`db/schema.sql`, and the `INSERT` / `UPDATE (rating, comment)` grants on
+`GameRating` in `db/roles.sql`. Devansh will add their sections here when they
+are built.
 
 ## Organizer (Jason)
 
@@ -440,14 +445,105 @@ was kept. A fresh `db/reset.sh` has them already.
 
 A grouped query keeps every hosted game, computes `AVG(GameRating.rating)` and
 uses filtered `json_agg` to return each player's stars and optional comment.
-Games with no ratings have a count of zero and an empty JSON array.
+Games with no ratings have a count of zero and an empty JSON array. The only
+parameter is the organizer's own id (`$1 = req.user.id`).
+
+```sql
+SELECT g.game_id, g.format, g.skill_level, g.status AS game_status, r.start_time,
+       f.field_id, f.name AS field_name, f.borough,
+       COUNT(gr.user_id)        AS rating_count,
+       ROUND(AVG(gr.rating), 2) AS average_rating,
+       COALESCE(
+           json_agg(json_build_object(
+               'user_id', gr.user_id, 'player_name', u.name,
+               'rating', gr.rating, 'comment', gr.comment,
+               'rated_at', to_char(gr.rated_at, 'YYYY-MM-DD HH24:MI:SS')
+           ) ORDER BY gr.rated_at, gr.user_id)
+           FILTER (WHERE gr.user_id IS NOT NULL),
+           '[]'::json
+       ) AS ratings
+FROM PickupGame g
+JOIN Reservation r ON r.reservation_id = g.reservation_id
+JOIN Field f ON f.field_id = r.field_id
+LEFT JOIN GameRating gr ON gr.game_id = g.game_id
+LEFT JOIN Users u ON u.user_id = gr.user_id
+WHERE g.organizer_id = $1
+GROUP BY g.game_id, r.start_time, f.field_id, f.name, f.borough
+ORDER BY r.start_time DESC, g.game_id DESC;
+```
+
+The `LEFT JOIN` to `GameRating` keeps games nobody has rated. For those games
+the one joined row has `gr.user_id IS NULL`, so `COUNT(gr.user_id)` is 0 and the
+`FILTER` leaves `json_agg` with nothing to collect, which `COALESCE` turns into
+`[]`. Grouping by `g.game_id` (the primary key) lets the query select the other
+`PickupGame` columns without listing them in `GROUP BY`.
 
 ### O5. Frequent players: `GET /api/organizer/frequent-players`
 
-Part 2 Q5 is restricted to this organizer, active registrations, completed
-games and the last year. `RANK()` gives ties the same position. The companion
-endpoint `GET /api/organizer/players/:id/games` verifies that the player joined
-one of this organizer's games before listing that player's games.
+Part 2 Q5 with `RANK()`, restricted to this organizer, active registrations,
+completed games and the last year. `RANK()` gives tied players the same
+position. The only parameter is the organizer's id (`$1`):
+
+```sql
+WITH played AS (
+    SELECT u.user_id, u.name,
+           COUNT(*)                             AS games_played,
+           MAX(r.start_time)::date              AS last_game,
+           RANK() OVER (ORDER BY COUNT(*) DESC) AS player_rank
+    FROM GameRegistration x
+    JOIN Users u       ON u.user_id = x.user_id
+    JOIN PickupGame g  ON g.game_id = x.game_id
+    JOIN Reservation r ON r.reservation_id = g.reservation_id
+    WHERE g.organizer_id = $1
+      AND x.registration_status = 'registered'
+      AND g.status = 'completed'
+      AND r.start_time >= nyc_now() - INTERVAL '1 year'
+      AND r.start_time <= nyc_now()
+    GROUP BY u.user_id, u.name
+)
+SELECT player_rank, user_id, name, games_played, last_game
+FROM played
+ORDER BY player_rank, name;
+```
+
+The window function runs after `GROUP BY`, so `RANK()` orders the per-player
+counts. Every ranked player is returned; this list is not cut to a top five.
+
+**One player's games: `GET /api/organizer/players/:id/games`.** Clicking a
+player opens the games they played with this organizer. The route first checks
+that the player joined one of this organizer's completed games and stayed
+registered; otherwise it returns 404, so an organizer cannot look up any player
+by id (`$1` = player id, `$2` = organizer id):
+
+```sql
+SELECT u.user_id, u.name
+FROM Users u
+WHERE u.user_id = $1
+  AND EXISTS (
+      SELECT 1
+      FROM GameRegistration x
+      JOIN PickupGame g ON g.game_id = x.game_id
+      WHERE x.user_id = u.user_id
+        AND x.registration_status = 'registered'
+        AND g.organizer_id = $2
+        AND g.status = 'completed'
+  );
+```
+
+The games come from the shared game list, newest first (at most 200), with the
+same three conditions:
+
+```sql
+-- gameListSql(where, { orderBy: 'r.start_time DESC' }) with:
+WHERE (g.organizer_id = $1)
+  AND (EXISTS (SELECT 1 FROM GameRegistration x
+               WHERE x.game_id = g.game_id AND x.user_id = $2
+                 AND x.registration_status = 'registered'))
+  AND (g.status = 'completed')
+```
+
+Unlike the frequent-players list, this one has no one-year limit, so it shows
+every completed game the player played with this organizer.
 
 ### O6. Reports: `GET /api/organizer/reports`
 
@@ -456,6 +552,48 @@ custom range of up to five years (`resolveReportRange` in
 `server/src/lib/reports.js`, shared with A5). `generate_series` returns every calendar month, including zeroes,
 and a left join adds the number of sign-up events and registrations that remain
 active. The page shows the totals plus an accessible monthly chart/table.
+
+`$1` is the organizer's id; `$2` and `$3` are the dates from
+`resolveReportRange`. The query still falls back to the year ending today if
+either date is `NULL`:
+
+```sql
+WITH bounds AS (
+    SELECT COALESCE($2::date, (nyc_now() - INTERVAL '1 year')::date) AS from_date,
+           COALESCE($3::date, nyc_now()::date)                       AS to_date
+),
+months AS (            -- every calendar month in the range, even empty ones
+    SELECT generate_series(date_trunc('month', from_date),
+                           date_trunc('month', to_date),
+                           INTERVAL '1 month') AS month,
+           from_date, to_date
+    FROM bounds
+),
+counts AS (            -- sign-ups to this organizer's games, per month
+    SELECT date_trunc('month', x.joined_at) AS month,
+           COUNT(*)                                                      AS signups,
+           COUNT(*) FILTER (WHERE x.registration_status = 'registered') AS still_registered
+    FROM GameRegistration x
+    JOIN PickupGame g ON g.game_id = x.game_id
+    CROSS JOIN bounds b
+    WHERE g.organizer_id = $1
+      AND x.joined_at >= b.from_date
+      AND x.joined_at < b.to_date + INTERVAL '1 day'
+    GROUP BY date_trunc('month', x.joined_at)
+)
+SELECT to_char(m.month, 'YYYY-MM') AS month,
+       COALESCE(c.signups, 0)          AS signups,
+       COALESCE(c.still_registered, 0) AS still_registered,
+       to_char(m.from_date, 'YYYY-MM-DD') AS from_date,
+       to_char(m.to_date, 'YYYY-MM-DD')   AS to_date
+FROM months m
+LEFT JOIN counts c ON c.month = m.month
+ORDER BY m.month;
+```
+
+A sign-up is counted in the month of `joined_at`, so a player who later left
+still counts in `signups` but not in `still_registered`. The route adds up the
+monthly rows to get the two totals.
 
 ## Admin (Abhinav; reports: Devansh)
 
@@ -571,7 +709,7 @@ Rosters show names only, never email addresses.
 ### Admin home: `GET /api/admin/summary`
 Four counts in one query of scalar subqueries: bookings waiting for review, upcoming games, fields, and closures now or coming up.
 
-### A5. Reports (Devansh)
+### A5. Reports (Devansh): `GET /api/admin/reports`
 
 `GET /api/admin/reports?from=&to=` returns every A5 report in one response. A
 missing range means the year ending today; both ends are inclusive, and a range
@@ -579,19 +717,145 @@ may be at most five years long (`resolveReportRange` in
 `server/src/lib/reports.js`, shared with O6). The client also offers a
 past-month preset and a custom date range.
 
-- **Field usage hours:** sum the duration of approved, non-cancelled game
-  bookings in the range (`SUM(EXTRACT(EPOCH FROM (end_time-start_time))/3600)`).
-- **Bookings by month:** `generate_series` creates every month in the range,
-  including zero months, then a left join adds total and approved bookings for
-  the chart and table.
-- **By borough (Part 2 Q7):** fields, non-cancelled games, completed and
-  upcoming games, active sign-ups, and approved usage hours. `Field` stays on
-  the left so all five boroughs remain visible even with no games in the range.
-- **By format and skill level (Part 2 Q8):** one query with `GROUPING SETS`,
-  returning game count and average percentage of spots taken.
-- **Most active players (Part 2 Q5):** completed games with active
-  registrations, ranked with `RANK()`; everyone whose rank is at most five is
-  kept, including ties.
+The route runs the five queries below at the same time, each with the same two
+parameters: `$1` = from date and `$2` = to date. "In the range" always means
+`r.start_time >= $1::date AND r.start_time < $2::date + INTERVAL '1 day'`, so
+the whole of the last day is included.
+
+**Field usage hours (summary).** Sum the duration of approved, non-cancelled
+game bookings in the range, plus booking counts by status, in one pass with
+`FILTER`:
+
+```sql
+SELECT ROUND(COALESCE(SUM(EXTRACT(EPOCH FROM (r.end_time - r.start_time)) / 3600)
+                      FILTER (WHERE r.status = 'approved' AND g.status <> 'cancelled'), 0), 1) AS field_usage_hours,
+       COUNT(*)                                       AS bookings,
+       COUNT(*) FILTER (WHERE r.status = 'approved')  AS approved_bookings,
+       COUNT(*) FILTER (WHERE r.status = 'pending')   AS pending_bookings,
+       COUNT(*) FILTER (WHERE r.status = 'rejected')  AS rejected_bookings,
+       COUNT(*) FILTER (WHERE r.status = 'cancelled') AS cancelled_bookings
+FROM Reservation r
+JOIN PickupGame g ON g.reservation_id = r.reservation_id
+WHERE r.start_time >= $1::date
+  AND r.start_time < $2::date + INTERVAL '1 day';
+```
+
+**Bookings by month.** `generate_series` creates every month in the range,
+including zero months, then a left join adds total and approved bookings for
+the chart and table:
+
+```sql
+WITH months AS (
+    SELECT generate_series(date_trunc('month', $1::date),
+                           date_trunc('month', $2::date),
+                           INTERVAL '1 month') AS month
+), counts AS (
+    SELECT date_trunc('month', r.start_time) AS month,
+           COUNT(*)                                      AS bookings,
+           COUNT(*) FILTER (WHERE r.status = 'approved') AS approved
+    FROM Reservation r
+    JOIN PickupGame g ON g.reservation_id = r.reservation_id
+    WHERE r.start_time >= $1::date
+      AND r.start_time < $2::date + INTERVAL '1 day'
+    GROUP BY date_trunc('month', r.start_time)
+)
+SELECT to_char(m.month, 'YYYY-MM') AS month,
+       COALESCE(c.bookings, 0) AS bookings,
+       COALESCE(c.approved, 0) AS approved
+FROM months m
+LEFT JOIN counts c ON c.month = m.month
+ORDER BY m.month;
+```
+
+**By borough (Part 2 Q7).** Fields, non-cancelled games, completed and
+upcoming games, active sign-ups, and approved usage hours. `Field` stays on
+the left so all five boroughs remain visible even with no games in the range.
+The date condition is in the `ON` clause of the `LEFT JOIN`, not in `WHERE`;
+in `WHERE` it would drop the fields with no bookings in the range.
+
+```sql
+WITH signups AS (
+    SELECT game_id, COUNT(*) AS signed_up
+    FROM GameRegistration
+    WHERE registration_status = 'registered'
+    GROUP BY game_id
+)
+SELECT f.borough,
+       COUNT(DISTINCT f.field_id)                                                          AS fields,
+       COUNT(g.game_id) FILTER (WHERE g.status <> 'cancelled')                             AS games,
+       COUNT(g.game_id) FILTER (WHERE g.status = 'completed')                              AS completed,
+       COUNT(g.game_id) FILTER (WHERE g.status = 'scheduled' AND r.start_time > nyc_now()) AS upcoming,
+       COALESCE(SUM(s.signed_up) FILTER (WHERE g.status <> 'cancelled'), 0)                AS player_signups,
+       ROUND(COALESCE(SUM(EXTRACT(EPOCH FROM (r.end_time - r.start_time)) / 3600)
+                      FILTER (WHERE r.status = 'approved' AND g.status <> 'cancelled'), 0), 1) AS usage_hours
+FROM Field f
+LEFT JOIN Reservation r
+       ON r.field_id = f.field_id
+      AND r.start_time >= $1::date
+      AND r.start_time < $2::date + INTERVAL '1 day'
+LEFT JOIN PickupGame g ON g.reservation_id = r.reservation_id
+LEFT JOIN signups s    ON s.game_id = g.game_id
+GROUP BY f.borough
+ORDER BY games DESC, f.borough;
+```
+
+**By format and skill level (Part 2 Q8).** One query with `GROUPING SETS`
+returns two breakdowns from one scan: one row per format and one row per skill
+level, each with the game count and average percentage of spots taken.
+`GROUPING(g.format)` is 0 on the format rows and 1 on the skill-level rows,
+which is how `grouped_by` labels them; the route splits the rows into the two
+tables on that label.
+
+```sql
+WITH signups AS (
+    SELECT game_id, COUNT(*) AS signed_up
+    FROM GameRegistration
+    WHERE registration_status = 'registered'
+    GROUP BY game_id
+)
+SELECT CASE WHEN GROUPING(g.format) = 0 THEN 'format' ELSE 'skill level' END AS grouped_by,
+       COALESCE(g.format, g.skill_level)                                     AS value,
+       COUNT(*)                                                              AS games,
+       ROUND(AVG(100.0 * COALESCE(s.signed_up, 0) / g.max_players))          AS avg_spots_taken_pct
+FROM PickupGame g
+JOIN Reservation r  ON r.reservation_id = g.reservation_id
+LEFT JOIN signups s ON s.game_id = g.game_id
+WHERE g.status <> 'cancelled'
+  AND r.start_time >= $1::date
+  AND r.start_time < $2::date + INTERVAL '1 day'
+GROUP BY GROUPING SETS ((g.format), (g.skill_level))
+ORDER BY grouped_by, games DESC, value;
+```
+
+**Most active players (Part 2 Q5).** Completed games with active
+registrations, ranked with `RANK()`; everyone whose rank is at most five is
+kept, including ties. This is the same query as O5 without the organizer
+condition, and with the report range instead of the last year:
+
+```sql
+WITH played AS (
+    SELECT u.user_id, u.name,
+           COUNT(*)                             AS games_played,
+           MAX(r.start_time)::date              AS last_game,
+           RANK() OVER (ORDER BY COUNT(*) DESC) AS player_rank
+    FROM GameRegistration x
+    JOIN Users u       ON u.user_id = x.user_id
+    JOIN PickupGame g  ON g.game_id = x.game_id
+    JOIN Reservation r ON r.reservation_id = g.reservation_id
+    WHERE x.registration_status = 'registered'
+      AND g.status = 'completed'
+      AND r.start_time >= $1::date
+      AND r.start_time < $2::date + INTERVAL '1 day'
+    GROUP BY u.user_id, u.name
+)
+SELECT player_rank, user_id, name, games_played, last_game
+FROM played
+WHERE player_rank <= 5
+ORDER BY player_rank, name;
+```
+
+The rank filter is in the outer query because a window function cannot be used
+in the `WHERE` of the query that computes it.
 
 The SQL is in `server/src/lib/adminReports.js`; tests are in
 `server/test/admin-reports.test.js`. Reports only read columns already granted

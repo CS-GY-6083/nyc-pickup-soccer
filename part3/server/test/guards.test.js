@@ -1,8 +1,8 @@
 // Authorization: every protected route re-checks the user's role in the
-// database (middleware/auth.js). The role routers are still empty stubs,
-// so a request that passes the guard gets 404 ("no such endpoint yet")
-// and one that fails gets 401/403. Teammates: when you add endpoints,
-// add tests for them in their own file (e.g. test/player.test.js).
+// database (middleware/auth.js). These tests ask for /<area>/anything, a
+// path with no endpoint: a request that passes the guard gets 404, and
+// one that fails gets 401/403. The use cases behind each guard are tested
+// in their own files (player, organizer, admin, admin-reports).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startTestServer, USERS, uniqueEmail, query } from './helpers.js';
