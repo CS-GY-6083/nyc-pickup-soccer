@@ -71,8 +71,11 @@ function HostedGame({ game, onChanged }) {
     }
   }
 
-  const canComplete = game.game_status === 'scheduled' && game.booking_status === 'approved' && ['in_progress', 'finished'].includes(game.game_state);
-  const canCancel = game.game_status === 'scheduled';
+  // Once a game kicks off on its approved field it has happened: it can be
+  // completed but no longer called off (the API refuses with a 409).
+  const playedOnField = game.booking_status === 'approved' && ['in_progress', 'finished'].includes(game.game_state);
+  const canComplete = game.game_status === 'scheduled' && playedOnField;
+  const canCancel = game.game_status === 'scheduled' && !playedOnField;
   return (
     <li className="px-4 py-4">
       <div className="grid items-center gap-3 lg:grid-cols-[150px_minmax(0,1fr)_auto_minmax(0,auto)]">

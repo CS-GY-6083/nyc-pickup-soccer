@@ -195,6 +195,31 @@ describe('O3. complete or cancel a hosted game', () => {
     await query('DELETE FROM Reservation WHERE reservation_id = $1', [fx.reservationId]);
   });
 
+  test('refuses to call off a game that kicked off on its approved field', async () => {
+    const fx = await makeHostedGame({
+      start: '2026-11-14 08:00', end: '2026-11-14 10:00', bookingStatus: 'approved', players: [13],
+    });
+    const res = await organizer.post(`/organizer/games/${fx.gameId}/status`, { status: 'cancelled' });
+    assert.equal(res.status, 409, JSON.stringify(res.data));
+    assert.match(res.data.error, /already kicked off/);
+    const { rows: [row] } = await query(
+      `SELECT g.status AS game_status, r.status AS booking_status,
+              (SELECT COUNT(*) FROM GameRegistration x
+               WHERE x.game_id = g.game_id AND x.registration_status = 'registered') AS active
+       FROM PickupGame g JOIN Reservation r ON r.reservation_id = g.reservation_id
+       WHERE g.game_id = $1`,
+      [fx.gameId],
+    );
+    assert.deepEqual(row, { game_status: 'scheduled', booking_status: 'approved', active: 1 });
+  });
+
+  test('can still call off a past game whose field was never approved', async () => {
+    const fx = await makeHostedGame({ start: '2026-11-14 08:00', end: '2026-11-14 10:00', players: [13] });
+    const res = await organizer.post(`/organizer/games/${fx.gameId}/status`, { status: 'cancelled' });
+    assert.equal(res.status, 200, JSON.stringify(res.data));
+    assert.equal(res.data.game.status, 'cancelled');
+  });
+
   test('refuses an early completion, another organizer\'s game and bad status', async () => {
     assert.equal((await organizer.post('/organizer/games/12/status', { status: 'completed' })).status, 409);
     assert.equal((await organizer.post('/organizer/games/2/status', { status: 'cancelled' })).status, 404);
@@ -250,5 +275,12 @@ describe('O6. reports', () => {
     assert.deepEqual(res.data.months.map((month) => month.month), ['2026-10']);
     assert.ok(res.data.total_signups > 0);
     assert.equal((await organizer.get('/organizer/reports', { from: '2026-12-01', to: '2026-11-01' })).status, 400);
+  });
+
+  test('refuses a range longer than five years', async () => {
+    const res = await organizer.get('/organizer/reports', { from: '0001-01-01', to: '9999-12-31' });
+    assert.equal(res.status, 400);
+    assert.match(res.data.error, /at most 5 years/);
+    assert.equal((await organizer.get('/organizer/reports', { from: '2021-11-14', to: '2026-11-14' })).status, 200);
   });
 });

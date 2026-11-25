@@ -31,6 +31,7 @@ import {
   ORGANIZER_GAME_FOR_UPDATE_SQL, ORGANIZER_GAME_SQL, ORGANIZER_PLAYER_SQL,
   ORGANIZER_RATINGS_SQL, ORGANIZER_REPORT_SQL, ORGANIZER_ROSTER_SQL,
 } from '../lib/organizer.js';
+import { resolveReportRange } from '../lib/reports.js';
 import {
   BOROUGHS, FORMATS, SKILL_LEVELS, checkDateOrder, optionalChoice, optionalDate,
   optionalId, requireChoice, requireDate, requireDateTime, requireId, requireNumber,
@@ -144,6 +145,13 @@ router.post('/games/:id/status', async (req, res) => {
       return { game: rows[0], signups_cancelled: 0 };
     }
 
+    // A game that went ahead on its approved field has happened: calling it
+    // off afterwards would erase its attendance from the reports and stop
+    // its players from rating it. A booking that was never approved can
+    // still be cleaned up after its start time.
+    if (booking.kicked_off && booking.booking_status === 'approved') {
+      throw new HttpError(409, 'This game has already kicked off, so it can\'t be called off. Mark it completed instead.');
+    }
     await client.query(CANCEL_BOOKING_SQL, [booking.reservation_id]);
     const { rows } = await client.query(CANCEL_HOSTED_GAME_SQL, [gameId]);
     const signups = await client.query(CANCEL_HOSTED_SIGNUPS_SQL, [gameId]);
@@ -185,9 +193,7 @@ router.get('/players/:id/games', async (req, res) => {
 
 // GET /api/organizer/reports?from=&to=
 router.get('/reports', async (req, res) => {
-  const from = optionalDate(req.query.from, 'From date');
-  const to = optionalDate(req.query.to, 'To date');
-  checkDateOrder(from, to);
+  const { from, to } = await resolveReportRange(req.query.from, req.query.to);
   const { rows } = await query(ORGANIZER_REPORT_SQL, [req.user.id, from, to]);
   res.json({
     from: rows[0]?.from_date ?? from,

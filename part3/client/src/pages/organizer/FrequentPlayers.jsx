@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown, Trophy } from 'lucide-react';
 import { api } from '../../api.js';
-import { Button, EmptyState, Icon, Notice, Page, Skeleton } from '../../components/v2/index.js';
+import { Button, EmptyState, Icon, Notice, Page, Skeleton, gameState } from '../../components/v2/index.js';
 import { formatDate } from '../../format.js';
 import { cn } from '../../lib/utils.js';
 
@@ -17,7 +17,7 @@ function PlayerGames({ playerId }) {
   if (!data) return <p className="text-[14px] text-muted-foreground">Loading games…</p>;
   return (
     <ul className="space-y-1 text-[14px]">
-      {data.games.map((game) => <li key={game.game_id}><span className="font-semibold">Game #{game.game_id}</span> · {formatDate(game.start_time)} · {game.field_name} · {game.game_state.replaceAll('_', ' ')}</li>)}
+      {data.games.map((game) => <li key={game.game_id}><span className="font-semibold">Game #{game.game_id}</span> · {formatDate(game.start_time)} · {game.field_name} · {gameState(game.game_state).label}</li>)}
     </ul>
   );
 }
@@ -29,7 +29,7 @@ function PlayerRow({ player }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-full bg-primary-soft font-display text-[18px] font-bold text-accent-ink tnum">#{player.player_rank}</span>
-          <div><p className="font-semibold">{player.name}</p><p className="text-[13px] text-muted-foreground tnum">{player.games_played} completed {player.games_played === 1 ? 'game' : 'games'} · last played {player.last_game}</p></div>
+          <div><p className="font-semibold">{player.name}</p><p className="text-[13px] text-muted-foreground tnum">{player.games_played} completed {player.games_played === 1 ? 'game' : 'games'} · last played {formatDate(player.last_game)}</p></div>
         </div>
         <Button size="sm" variant="secondary" onClick={() => setOpen((value) => !value)} aria-expanded={open}>Games<Icon icon={ChevronDown} tone="label" size="16px" className={cn('transition-transform', open && 'rotate-180')} /></Button>
       </div>

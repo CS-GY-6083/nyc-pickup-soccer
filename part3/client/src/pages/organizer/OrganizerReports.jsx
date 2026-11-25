@@ -5,6 +5,7 @@ import { BarChart3, RotateCcw } from 'lucide-react';
 import { api } from '../../api.js';
 import MonthlyBarChart from '../../components/MonthlyBarChart.jsx';
 import { Button, CARD, Icon, Notice, Page, Skeleton, StatTile, TextField } from '../../components/v2/index.js';
+import { formatDate } from '../../format.js';
 import { cn } from '../../lib/utils.js';
 
 const EMPTY = { from: '', to: '' };
@@ -46,7 +47,7 @@ export default function OrganizerReports() {
       {!report && !error && <Skeleton rows={4} label="Loading report" />}
       {report && (
         <>
-          <p className="mb-4 text-[14px] text-muted-foreground tnum">{report.from} through {report.to}, inclusive</p>
+          <p className="mb-4 text-[14px] text-muted-foreground tnum">{formatDate(report.from)} through {formatDate(report.to)}, inclusive</p>
           <div className="mb-8 grid gap-4 sm:grid-cols-2">
             <StatTile label="Sign-ups made" value={report.total_signups} />
             <StatTile label="Still registered" value={report.still_registered} />
