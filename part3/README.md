@@ -4,6 +4,8 @@ CS-GY 6083, Fall 2026. Abhinav Sivakumar (as21153), Devansh Vikram (dv2482), Jas
 
 React (Vite) front end, Node/Express JSON API, PostgreSQL 17. Who builds what, and when: [docs/WORK_PLAN.md](docs/WORK_PLAN.md). Latest status for the team: [docs/TEAM_UPDATE.md](docs/TEAM_UPDATE.md).
 
+Hand-in documents: [use cases and their queries](docs/USE_CASES.md), [every file](docs/FILES.md), [airline spec → our app](docs/SPEC_MAPPING.md), [schema and ER diagram](docs/SCHEMA.md), [who did what](docs/WHO_DID_WHAT.md), [evaluation](docs/EVALUATION.md), [demo script](docs/DEMO.md). Database backup: `db/backup.sh`.
+
 ## Run it locally
 
 You need Node 22+ and PostgreSQL 17 running locally.
@@ -84,7 +86,7 @@ part3/
     auth/           AuthContext (useAuth), RequireRole
     components/     GameTable, GameSearchForm, MonthlyBarChart, Flash, NavBar, ...
     pages/          public/, player/, organizer/, admin/
-  docs/             work plan, progress report, use cases + queries
+  docs/             work plan, use cases + queries, file list, spec mapping, schema, demo, evaluation
 ```
 
 ## How to add a use case

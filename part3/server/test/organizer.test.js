@@ -1,4 +1,5 @@
-// Organizer use cases O1-O2. "Now" is frozen at 2026-11-14 12:00 in
+// Organizer use cases O1-O6 (and O3's delayed / on time, and the O2
+// booking limits). "Now" is frozen at 2026-11-14 12:00 in
 // test/fake-clock.sql. Tests create their own game through the API and
 // remove it afterwards, leaving the shared seed data unchanged.
 import { test, describe, before, after } from 'node:test';

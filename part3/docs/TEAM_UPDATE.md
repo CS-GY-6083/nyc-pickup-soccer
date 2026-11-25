@@ -1,6 +1,32 @@
-# Team update: Nov 24, 2026
+# Team update: Nov 25, 2026
 
 From Abhinav to Jason and Devansh.
+
+## New on Nov 25 (all merged and live)
+
+- **Delayed status (O3, PR #5).** The spec's "change status: on time ↔ delayed". On Hosted games, organizers can mark a game delayed, with a note for players, or back on time. It shows as a "Delayed" tag on every game list and on Game status.
+  - It's a flag beside the status (`PickupGame.delayed`, `delay_note`), not a new status value, so every `status = 'scheduled'` query still works.
+  - The live database got it through `db/migrations/001_game_delayed.sql`, so no data was lost.
+- **Fixes (PR #4):**
+  - A game that kicked off on its approved field can no longer be called off; mark it completed instead.
+  - Report date ranges are capped at 5 years. **Devansh: use `resolveReportRange` from `server/src/lib/reports.js` for U6.**
+- **Robustness and security (PRs #6, #7):**
+  - "Please try again" messages instead of 500s when the database is busy, and time limits on the live database login.
+  - Sessions end 8 hours after login.
+  - Cross-site requests are refused, and an enforced Content-Security-Policy.
+  - `GET /api/health`.
+  - Organizers can book at most 90 days ahead and have at most 10 bookings waiting for approval.
+- **Hand-in docs** (please read the drafts and fix your parts):
+  - [`SPEC_MAPPING.md`](SPEC_MAPPING.md): airline → ours, and the deviations;
+  - [`DEMO.md`](DEMO.md): the demo script;
+  - [`WHO_DID_WHAT.md`](WHO_DID_WHAT.md): check your section;
+  - [`EVALUATION.md`](EVALUATION.md): add your thoughts;
+  - [`SCHEMA.md`](SCHEMA.md): schema and ER diagram;
+  - [`FILES.md`](FILES.md): every file;
+  - the missing SQL in [`USE_CASES.md`](USE_CASES.md) for O4–O6 and A5. Jason and Devansh, please check yours.
+- **Server tests:** 210 now. **If you pull:** run `db/reset.sh` once for the new columns.
+
+## Nov 24
 
 ## The app is live
 
@@ -14,7 +40,6 @@ Hosted on Vercel with a Neon Postgres database. Demo logins from `db/seed.sql`:
 | Organizer | kwame.mensah@example.com | kwame123 |
 | Player    | liam.obrien@example.com  | liam123  |
 
-## What's new since Nov 16
 
 - **Merged into `main`:** Jason's organizer use cases O1–O6 (PR #2), and Devansh's player use cases U1–U4 plus the admin reports A5 (PR #3).
 - **Deployed to the live site on Nov 24.** All 191 server tests pass with the live site's limited database permissions. I also logged in on the live site as the demo organizer, player and admin: every new page loads real data, and each role is refused on the other roles' pages.
@@ -23,7 +48,7 @@ Hosted on Vercel with a Neon Postgres database. Demo logins from `db/seed.sql`:
 
 ## Done so far
 
-- **Base app:** Express API and React app, logins checked with md5 (as the spec says), sessions stored in Postgres, role checks on every request, shared game-list SQL, the date-shift script, and 191 server tests (run with the live site's limited database permissions).
+- **Base app:** Express API and React app, logins checked with md5 (as the spec says), sessions stored in Postgres, role checks on every request, shared game-list SQL, the date-shift script, and 210 server tests (run with the live site's limited database permissions).
 - **Database:** the `GameState` view for game states, and the `soccer_app` / `soccer_readonly` roles with a restricted login for the live site.
 - **Public pages (Abhinav):** search upcoming games (P1), game status by game number or by field and date (P2), register, log in, log out and the goodbye page (P3–P5).
 - **Field map and field pages (Abhinav):** every field with its game counts, filters, and a "near me" sort using distances computed in SQL, plus opening hours and closures.
@@ -37,28 +62,37 @@ Hosted on Vercel with a Neon Postgres database. Demo logins from `db/seed.sql`:
 
 ## Still to do
 
-**Devansh: the last two player use cases**
+**Devansh: the last two player use cases, and A5's totals**
 - **U5 rate games.** `/player/ratings` still shows "coming soon". The planned endpoint is in the comments at the top of [`server/src/routes/player.js`](../server/src/routes/player.js). The database already allows it (`GameRating` grants in `db/roles.sql`), and the trigger in `db/schema.sql` refuses games that aren't over or that the player left.
-- **U6 my activity.** `/player/activity` still shows "coming soon". [`MonthlyBarChart`](../client/src/components/MonthlyBarChart.jsx) is ready for the monthly chart; `OrganizerReports.jsx` and `AdminReports.jsx` use it.
+- **U6 my activity.** `/player/activity` still shows "coming soon".
+  - [`MonthlyBarChart`](../client/src/components/MonthlyBarChart.jsx) is ready for the monthly chart; `OrganizerReports.jsx` and `AdminReports.jsx` use it.
+  - Use `resolveReportRange` (`server/src/lib/reports.js`) for the date range.
+  - The spec's default: total for the past year, plus a chart of the last 6 months.
+- **A5:** show the last-month **and** last-year totals together (spec: "earned revenue in the last month and last year").
 
-**Everyone: joint run on the live site**
-- Jason creates a game, Abhinav approves it, Devansh joins it. All three steps are live now.
+**Jason**
+- O6: add a "Last month" preset on Reports (spec: "last year / last month").
+- Read the O4–O6 SQL now in `USE_CASES.md` and your section of `WHO_DID_WHAT.md`.
 
-**Everyone: wrap-up (Dec 2–7)**
-- Invalid-input and security testing
-- `pg_dump` backup
-- `FILES.md`
-- `WHO_DID_WHAT.md`
-- The table mapping each airline use case to ours
-- The evaluation
-- Updated ER diagram (with `GameRating`)
-- Demo rehearsal
+**Abhinav**
+- After U5/U6 merge: client clean-up, including:
+  - lazy-loading pages (the first load is about 1 MB);
+  - an error screen instead of a blank page;
+  - confirm before Leave, Cancel and Complete;
+  - fewer repeat requests, and accessibility fixes.
+- Dec 7: `db/backup.sh` on the live database, and the ER diagram as an image.
+
+**Everyone**
+- The joint run on the live site: Jason creates a game, Abhinav approves it, Devansh joins it.
+- Fix your sections of `WHO_DID_WHAT.md` and add to `EVALUATION.md`.
+- Rehearse with `DEMO.md`. Each of us should be able to explain our own code.
 
 ## Working on the code
 
 - Work on your own branch and open a pull request into `main`. Run `npm test` in `server/` before every push.
 - After pulling database changes, run `db/reset.sh` once.
 - If your use case writes somewhere new, add its `GRANT` to [`db/roles.sql`](../db/roles.sql). `npm test` runs the API as `soccer_app`, so a missing grant fails your tests with "permission denied".
+- If you change a table, also add a file to [`db/migrations/`](../db/migrations/) (see `001_game_delayed.sql`), so the live database can be updated without a reset.
 - Game states come from the `GameState` view. Shared SQL is in [`server/src/lib/games.js`](../server/src/lib/games.js) (`gameListSql` with an optional `viewerId`, `Where`, `UPCOMING`).
 - Shared UI components are in [`client/src/components/v2/index.js`](../client/src/components/v2/index.js): `Page`, `TextField`, `SelectField`, `Notice`, `Board`/`BoardRow` and `Button to="…"`.
 

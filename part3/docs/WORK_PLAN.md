@@ -66,7 +66,7 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
   - Organizer queries always filter `g.organizer_id = req.user.id`; another organizer's game id gives 404.
   - Player actions only touch `user_id = req.user.id`.
   - Organizers can use all four player pages, since they also play.
-- **Tests:** `npm test` in `server/` (191 tests so far: login, sessions, role guards, search, status, the field finder and field page, the admin use cases A1–A5, the player use cases U1–U4, the organizer use cases O1–O6, the database roles, the NYC Open Data field import, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
+- **Tests:** `npm test` in `server/` (210 tests so far: login, sessions, role guards, search, status, the field finder and field page, the admin use cases A1–A5, the player use cases U1–U4, the organizer use cases O1–O6, the database roles, the delayed status, report ranges, errors, sessions, cross-site checks and health, the NYC Open Data field import, the rating rule, the date shift). Each owner adds `server/test/<role>.test.js` for their endpoints. Cover the happy path, bad input, the wrong role, and someone else's game. Run `npm test` before every push.
 - Docs: each owner writes their own section of `USE_CASES.md`.
 
 ## Hosting (Vercel + Neon)
@@ -101,11 +101,11 @@ Each member owns full vertical slices (SQL, API route and React page), so everyo
 ## Final hand-in checklist
 - [ ] Work plan: this file. The spec asks teams to submit one "indicating who will do what".
 - [ ] Source code (client + server + db scripts + tests)
-- [ ] Database backup "including table structures and inserted data": `pg_dump --no-owner --exclude-table-data=session nyc_fields > part3/backup/nyc_fields.sql`
-- [ ] `docs/FILES.md`: every file and what it does
-- [ ] `docs/USE_CASES.md`: every use case and the queries it runs, with a short explanation
-- [ ] A table mapping each spec (airline) use case to our feature. The professor's demo test cases are written for airlines, and we are "responsible for translating" them.
-- [ ] `docs/WHO_DID_WHAT.md`
-- [ ] "An evaluation at the end" (listed with the deliverables; ask the professor what format is expected)
-- [ ] Updated relational schema diagram including `GameRating`
-- [ ] Demo: on a laptop. Run `db/reset.sh` that morning; it moves the sample dates forward so upcoming games are still upcoming. Each member should be able to explain their own code.
+- [ ] Database backup "including table structures and inserted data": `pg_dump --no-owner --exclude-table-data=session nyc_fields > part3/backup/nyc_fields.sql` Script ready: `db/backup.sh` (tested: restores with identical row counts). Run it on the live database on Dec 7.
+- [x] `docs/FILES.md`: every file and what it does (draft done Nov 25; update after U5/U6)
+- [ ] `docs/USE_CASES.md`: every use case and the queries it runs, with a short explanation (all built use cases have their SQL; U5/U6 to add)
+- [x] A table mapping each spec (airline) use case to our feature. The professor's demo test cases are written for airlines, and we are "responsible for translating" them. Done: `docs/SPEC_MAPPING.md`.
+- [ ] `docs/WHO_DID_WHAT.md` (draft done Nov 25; each member checks their section)
+- [ ] "An evaluation at the end" (listed with the deliverables; ask the professor what format is expected) Draft: `docs/EVALUATION.md`.
+- [x] Updated relational schema diagram including `GameRating` Done: `docs/SCHEMA.md` (Mermaid; export a PNG for the hand-in), and merged into `part2/create_tables.sql`.
+- [ ] Demo: on a laptop. Run `db/reset.sh` that morning; it moves the sample dates forward so upcoming games are still upcoming. Each member should be able to explain their own code. Script: `docs/DEMO.md`.
