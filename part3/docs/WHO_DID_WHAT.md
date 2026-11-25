@@ -61,14 +61,14 @@ PR #2, "implement organizer use cases".
 - **O3** Complete or cancel a game, locking the booking before the game.
 - **O4** Ratings: the average per game and every comment.
 - **O5** Frequent players in the past year, and all games one player played with this organizer.
-- **O6** Sign-up reports by month.
+- **O6** Sign-up reports by month for the past year, past month or a custom date range.
 - **Files:**
   - `server/src/lib/organizer.js`, `server/src/routes/organizer.js`;
   - `client/src/pages/organizer/` (Hosted games, Create game, Ratings, Frequent players, Reports);
   - `server/test/organizer.test.js` (17 tests in the PR);
   - the organizer section of `USE_CASES.md`.
 - **Also:** set up the GitHub organization and repository.
-- **To do:** the "Last month" preset on Reports (spec Staff 8).
+- **Follow-up:** added the "Past month" preset on Reports (spec Staff 8).
 
 ## Devansh
 

@@ -24,7 +24,7 @@ The spec says the demo "will mainly consist of running application on a bunch of
 | # | Do | Expect |
 |---|---|---|
 | 1 | **Find games:** pick a borough and a date range | Upcoming games only, each with its state and spots left. |
-| 2 | **Game status:** enter game number 16 | "Game on" with a **Delayed** tag and the organizer's note (spec: flight status). |
+| 2 | **Game status:** enter game number 16 | The current game state, field, kick-off, organizer and availability. A Delayed tag and note appear after step 18. |
 | 3 | **Game status:** pick a field and a date | Every game at that field that day. |
 | 4 | **Map:** filter by borough; try "Near me" | 364 fields; distances are worked out in SQL. |
 | 5 | **Register** a new player with a short password, then a valid one | A clear error, then the player's home page. |
@@ -52,9 +52,9 @@ U5 and U6 are still being built (Devansh). Check these two rows again before the
 | 15 | **Hosted games** | The next 30 days by default; open a roster (spec: customers of a flight). |
 | 16 | **Create a game:** pick a field and day, choose an open slot | "Waiting on the field"; it appears in the 30-day list on the same page. |
 | 17 | Try a time outside opening hours, during a closure, or more than 90 days ahead | A specific refusal for each. |
-| 18 | **Mark delayed** with a note, then check Game status | The Delayed tag and note on P2. Then **Back on time** (spec: on-time ↔ delayed). |
+| 18 | On an approved upcoming game, **Mark delayed** with a note, then check Game status | The Delayed tag and note on P2. Then **Back on time** (spec: on-time ↔ delayed). |
 | 19 | **Cancel** an upcoming game | Called off; its sign-ups are cancelled. Cancelling a game that has already kicked off is refused. |
-| 20 | **Ratings**, **Frequent players**, **Reports** | Averages and comments; players ranked over the past year; sign-ups by month (try a custom range). |
+| 20 | **Ratings**, **Frequent players**, **Reports** | Averages and comments; players ranked over the past year; sign-ups by month (try Past month, Past year and a custom range). |
 
 ## Admin (A1–A5), as Maria
 

@@ -247,7 +247,7 @@ Run with `npm test` in `server/`. The tests use their own database (`nyc_fields_
 | `client/src/pages/organizer/CreateGame.jsx` | O2: pick a field, day and open slot, then create the pending booking and its game; also lists my games in the next 30 days (Jason). |
 | `client/src/pages/organizer/OrganizerRatings.jsx` | O4: the average rating and every comment for each hosted game (Jason). |
 | `client/src/pages/organizer/FrequentPlayers.jsx` | O5: the players who played in my games most in the last year, and the games each one played (Jason). |
-| `client/src/pages/organizer/OrganizerReports.jsx` | O6: sign-up totals and a monthly bar chart for the past year or a chosen date range (Jason). |
+| `client/src/pages/organizer/OrganizerReports.jsx` | O6: sign-up totals and a monthly bar chart with Past year, Past month and custom date-range choices (Jason). |
 
 ## `client/src/pages/admin/`
 

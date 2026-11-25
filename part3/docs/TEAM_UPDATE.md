@@ -71,8 +71,8 @@ Hosted on Vercel with a Neon Postgres database. Demo logins from `db/seed.sql`:
 - **A5:** show the last-month **and** last-year totals together (spec: "earned revenue in the last month and last year").
 
 **Jason**
-- O6: add a "Last month" preset on Reports (spec: "last year / last month").
-- Read the O4–O6 SQL now in `USE_CASES.md` and your section of `WHO_DID_WHAT.md`.
+- O6 "Past month" report preset: completed in `dev_jason_followup` (spec: "last year / last month").
+- O4–O6 SQL in `USE_CASES.md` and Jason's section of `WHO_DID_WHAT.md`: reviewed against the implementation.
 
 **Abhinav**
 - After U5/U6 merge: client clean-up, including:

@@ -56,8 +56,8 @@ The course's Part 3 use cases are written for the Air Ticket Reservation System.
 | 5. Add new airport | **A3** Add a field closure; warns about approved games it overlaps | Done |
 | 6. View flight ratings (average and all comments) | **O4** Average rating per game and every comment | Done |
 | 7. Frequent customers in the last year; all flights of one customer | **O5** Frequent players in the last year; all games one player played with me | Done |
-| 8. View reports: tickets sold by date range / last year / last month, by month | **O6** Sign-ups: past year by default or a custom range, by month. **A5**: bookings by month | Done ("last month" preset: Jason) |
-| 9. View earned revenue: last month and last year | **A5** Field usage hours, plus breakdowns by borough, format and skill, and the most active players | Done (showing both periods side by side: Devansh) |
+| 8. View reports: tickets sold by date range / last year / last month, by month | **O6** Sign-ups: Past year, Past month or a custom range, by month. **A5**: bookings by month | Done (Past month preset: Jason) |
+| 9. View earned revenue: last month and last year | **A5** Field usage hours, plus breakdowns by borough, format and skill, and the most active players | Partly done: selectable Past month and Past year reports work; showing both totals together remains (Devansh) |
 | 10. Logout | **P5** | Done |
 | Extra | **A1** Approve or reject field bookings, with conflict checks (overlaps refused by the database, Part 2 Q10) | Done |
 

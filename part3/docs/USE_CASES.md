@@ -547,8 +547,9 @@ every completed game the player played with this organizer.
 
 ### O6. Reports: `GET /api/organizer/reports`
 
-The default range is the year ending today; `from` and `to` select an inclusive
-custom range of up to five years (`resolveReportRange` in
+The page offers Past year (the default), Past month and Custom presets. The
+Past month choice sends the date one month before today through today; `from`
+and `to` select an inclusive custom range of up to five years (`resolveReportRange` in
 `server/src/lib/reports.js`, shared with A5). `generate_series` returns every calendar month, including zeroes,
 and a left join adds the number of sign-up events and registrations that remain
 active. The page shows the totals plus an accessible monthly chart/table.
