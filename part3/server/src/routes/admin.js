@@ -29,8 +29,9 @@ import {
 } from '../lib/admin.js';
 import {
   ADMIN_REPORT_SUMMARY_SQL, BOOKINGS_BY_MONTH_SQL, GAMES_BY_BOROUGH_SQL,
-  GAMES_BY_FORMAT_SQL, MOST_ACTIVE_PLAYERS_SQL, REPORT_BOUNDS_SQL,
+  GAMES_BY_FORMAT_SQL, MOST_ACTIVE_PLAYERS_SQL,
 } from '../lib/adminReports.js';
+import { resolveReportRange } from '../lib/reports.js';
 import {
   BOROUGHS, SURFACES, checkDateOrder, containsPattern, optionalChoice, optionalDate,
   optionalId, optionalText, requireChoice, requireDateTime, requireId, requireNumber,
@@ -279,18 +280,12 @@ router.get('/games/:id/players', async (req, res) => {
 // ---------------------------------------------------------------------
 
 // GET /api/admin/reports?from=&to=
-// Missing dates mean the year ending today. The client offers last-month
-// and last-year presets, and can also send any inclusive custom range.
+// Missing dates mean the year ending today (lib/reports.js). The client
+// offers last-month and last-year presets, and can also send any
+// inclusive custom range of up to five years.
 router.get('/reports', async (req, res) => {
-  const requestedFrom = optionalDate(req.query.from, 'From date');
-  const requestedTo = optionalDate(req.query.to, 'To date');
-  checkDateOrder(requestedFrom, requestedTo);
-
-  const { rows: [bounds] } = await query(REPORT_BOUNDS_SQL, [requestedFrom, requestedTo]);
-  if (bounds.from_date > bounds.to_date) {
-    throw new HttpError(400, 'The start date must be on or before the end date.');
-  }
-  const params = [bounds.from_date, bounds.to_date];
+  const bounds = await resolveReportRange(req.query.from, req.query.to);
+  const params = [bounds.from, bounds.to];
   const [summary, months, boroughs, breakdowns, players] = await Promise.all([
     query(ADMIN_REPORT_SUMMARY_SQL, params),
     query(BOOKINGS_BY_MONTH_SQL, params),
@@ -300,8 +295,8 @@ router.get('/reports', async (req, res) => {
   ]);
 
   res.json({
-    from: bounds.from_date,
-    to: bounds.to_date,
+    from: bounds.from,
+    to: bounds.to,
     summary: summary.rows[0],
     months: months.rows,
     boroughs: boroughs.rows,

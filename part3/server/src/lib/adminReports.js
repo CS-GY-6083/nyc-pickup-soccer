@@ -2,11 +2,8 @@
 // Owner: Devansh
 //
 // Reports use an inclusive calendar-date range. The route resolves missing
-// dates to the year ending today before running the queries below.
-
-export const REPORT_BOUNDS_SQL = `
-SELECT to_char(COALESCE($1::date, (nyc_now() - INTERVAL '1 year')::date), 'YYYY-MM-DD') AS from_date,
-       to_char(COALESCE($2::date, nyc_now()::date), 'YYYY-MM-DD') AS to_date`;
+// dates to the year ending today (resolveReportRange in lib/reports.js)
+// before running the queries below.
 
 export const ADMIN_REPORT_SUMMARY_SQL = `
 SELECT ROUND(COALESCE(SUM(EXTRACT(EPOCH FROM (r.end_time - r.start_time)) / 3600)

@@ -49,4 +49,20 @@ describe('A5. admin reports', () => {
     assert.equal((await admin.get('/admin/reports', { from: 'not-a-date' })).status, 400);
     assert.equal((await admin.get('/admin/reports', { to: '2024-01-01' })).status, 400);
   });
+
+  test('a range may be at most five years long', async () => {
+    const ok = await admin.get('/admin/reports', { from: '2021-11-14', to: '2026-11-14' });
+    assert.equal(ok.status, 200, JSON.stringify(ok.data));
+    assert.equal(ok.data.months.length, 61);
+
+    for (const range of [
+      { from: '2021-11-13', to: '2026-11-14' },
+      { from: '0001-01-01', to: '9999-12-31' },
+      { from: '0001-01-01' },
+    ]) {
+      const res = await admin.get('/admin/reports', range);
+      assert.equal(res.status, 400, JSON.stringify(range));
+      assert.match(res.data.error, /at most 5 years/);
+    }
+  });
 });

@@ -6,7 +6,7 @@ import { CalendarPlus, Clock3 } from 'lucide-react';
 import { api } from '../../api.js';
 import {
   Button, CARD, EmptyState, FieldOptions, Icon, Notice, Page, SelectField,
-  Skeleton, TextField,
+  Skeleton, TextField, gameState,
 } from '../../components/v2/index.js';
 import { FORMATS, SKILL_LEVELS } from '../../constants.js';
 import { formatDate, formatTime, todayInNewYork } from '../../format.js';
@@ -35,7 +35,7 @@ function Upcoming({ games }) {
             <p className="font-semibold"><Link to="/organizer/games" className="text-foreground no-underline hover:underline">Game #{game.game_id} · {game.field_name}</Link></p>
             <p className="text-[14px] text-muted-foreground tnum">{formatDate(game.start_time)} · {formatTime(game.start_time)} · {game.format}</p>
           </div>
-          <span className="text-[13px] font-semibold text-muted-foreground">{game.booking_status === 'pending' ? 'Waiting on field approval' : game.game_state.replaceAll('_', ' ')}</span>
+          <span className="text-[13px] font-semibold text-muted-foreground">{gameState(game.game_state).label}</span>
         </li>
       ))}
     </ul>

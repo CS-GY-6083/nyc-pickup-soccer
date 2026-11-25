@@ -401,7 +401,11 @@ COMMIT;
 The transaction locks the game's `Reservation` first and `PickupGame` second,
 the same order as an admin review. Completing requires an approved booking and
 a kick-off that has started. Cancelling updates the booking and game and
-cancels every active registration in the same transaction.
+cancels every active registration in the same transaction. A game that kicked
+off on an approved field can't be cancelled (409, "mark it completed instead"):
+it has been played, and cancelling would erase its attendance from the reports
+and from rating eligibility. A past game whose booking was never approved can
+still be cancelled.
 
 ```sql
 SELECT ... FROM Reservation r JOIN PickupGame g ... FOR UPDATE OF r;
@@ -427,7 +431,8 @@ one of this organizer's games before listing that player's games.
 ### O6. Reports: `GET /api/organizer/reports`
 
 The default range is the year ending today; `from` and `to` select an inclusive
-custom range. `generate_series` returns every calendar month, including zeroes,
+custom range of up to five years (`resolveReportRange` in
+`server/src/lib/reports.js`, shared with A5). `generate_series` returns every calendar month, including zeroes,
 and a left join adds the number of sign-up events and registrations that remain
 active. The page shows the totals plus an accessible monthly chart/table.
 
@@ -548,8 +553,10 @@ Four counts in one query of scalar subqueries: bookings waiting for review, upco
 ### A5. Reports (Devansh)
 
 `GET /api/admin/reports?from=&to=` returns every A5 report in one response. A
-missing range means the year ending today; both ends are inclusive. The client
-also offers a past-month preset and a custom date range.
+missing range means the year ending today; both ends are inclusive, and a range
+may be at most five years long (`resolveReportRange` in
+`server/src/lib/reports.js`, shared with O6). The client also offers a
+past-month preset and a custom date range.
 
 - **Field usage hours:** sum the duration of approved, non-cancelled game
   bookings in the range (`SUM(EXTRACT(EPOCH FROM (end_time-start_time))/3600)`).
