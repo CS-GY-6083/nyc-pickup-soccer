@@ -1,7 +1,7 @@
 // Admin use cases (spec: Airline Staff, facility side). Mounted at
 // /api/admin behind requireRole('admin'), so req.user is always an
 // admin here. The SQL is in lib/admin.js.
-// Owners: Abhinav (A1-A4 below), Devash (A5 reports, still to come)
+// Owners: Abhinav (A1-A4 below), Devansh (A5 reports)
 //
 //   GET    /api/admin/summary                 numbers for the admin home page
 //   GET    /api/admin/bookings                A1. Pending bookings with conflict flags (Part 2 Q2)
@@ -14,7 +14,7 @@
 //   POST   /api/admin/closures                A3. Add a closure (spec: add airport); lists the games it overlaps
 //   GET    /api/admin/games                   A4. All games, any status, with filters
 //   GET    /api/admin/games/:id/players       A4. One game's roster
-//   GET    /api/admin/reports/*               A5. (Devash) field usage hours, bookings per month,
+//   GET    /api/admin/reports/*               A5. (Devansh) field usage hours, bookings per month,
 //                                                 by borough (Q7), by format (Q8), most active players (Q5)
 import { Router } from 'express';
 import { query, withTransaction } from '../db.js';

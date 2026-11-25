@@ -59,7 +59,7 @@ export default function App() {
           <Route path="/logout" element={<Logout />} />
           <Route path="/goodbye" element={<Goodbye />} />
 
-          {/* Player (Devash) */}
+          {/* Player (Devansh) */}
           <Route path="/player" element={guard(['player'], <PlayerHome />)} />
           <Route path="/player/games" element={guard(PLAYERS, <PlayerGames />)} />
           <Route path="/player/search" element={guard(PLAYERS, <PlayerSearch />)} />
@@ -74,7 +74,7 @@ export default function App() {
           <Route path="/organizer/players" element={guard(ORGANIZERS, <FrequentPlayers />)} />
           <Route path="/organizer/reports" element={guard(ORGANIZERS, <OrganizerReports />)} />
 
-          {/* Admin (Abhinav; reports: Devash) */}
+          {/* Admin (Abhinav; reports: Devansh) */}
           <Route path="/admin" element={guard(ADMINS, <AdminHome />)} />
           <Route path="/admin/bookings" element={guard(ADMINS, <AdminBookings />)} />
           <Route path="/admin/fields" element={guard(ADMINS, <AdminFields />)} />

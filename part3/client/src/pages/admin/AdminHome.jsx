@@ -1,7 +1,7 @@
 // Admin home page: the numbers that need attention, the booking queue,
 // then only the admin use cases. Actions on other admin pages come back
 // here with a success or error message (shown by <Flash /> in App.jsx).
-// Owners: Abhinav (bookings, fields, closures, games), Devash (reports)
+// Owners: Abhinav (bookings, fields, closures, games), Devansh (reports)
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { BarChart3, CalendarClock, CalendarX2, ClipboardCheck, MapPinned, Trophy } from 'lucide-react';

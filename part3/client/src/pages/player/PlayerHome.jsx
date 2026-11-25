@@ -1,5 +1,5 @@
 // Player home page: only the player use cases.
-// Owner: Devash (add upcoming games here if you like, e.g. "Your next game")
+// Owner: Devansh (add upcoming games here if you like, e.g. "Your next game")
 import { useAuth } from '../../auth/AuthContext.jsx';
 import UseCaseMenu from '../../components/UseCaseMenu.jsx';
 import { Page } from '../../components/v2/index.js';

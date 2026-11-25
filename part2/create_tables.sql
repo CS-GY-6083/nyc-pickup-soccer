@@ -3,7 +3,7 @@
 -- CS-GY 6083 Course Project, Part 2: Table definitions
 -- DBMS: PostgreSQL 17
 --
--- Team: Abhinav Sivakumar (as21153), Devash Vikram (dv2482),
+-- Team: Abhinav Sivakumar (as21153), Devansh Vikram (dv2482),
 --       Jason Parmar (jsp9287)
 --
 -- Organizers book a public NYC soccer field and post a pickup game on

@@ -1,6 +1,6 @@
 # NYC Pickup Soccer System: Part 3 web app
 
-CS-GY 6083, Fall 2026. Abhinav Sivakumar (as21153), Devash Vikram (dv2482), Jason Parmar (jsp9287).
+CS-GY 6083, Fall 2026. Abhinav Sivakumar (as21153), Devansh Vikram (dv2482), Jason Parmar (jsp9287).
 
 React (Vite) front end, Node/Express JSON API, PostgreSQL 17. Who builds what, and when: [docs/WORK_PLAN.md](docs/WORK_PLAN.md). Latest status for the team: [docs/TEAM_UPDATE.md](docs/TEAM_UPDATE.md).
 
@@ -72,9 +72,9 @@ part3/
     lib/games.js    shared game-list SQL (gameListSql), Where builder, gameSearchFilters
     routes/auth.js       register, login, logout, me
     routes/public.js     fields, game search, game status
-    routes/player.js     player use cases       (Devash)
+    routes/player.js     player use cases       (Devansh)
     routes/organizer.js  organizer use cases    (Jason)
-    routes/admin.js      admin use cases        (Abhinav; reports: Devash)
+    routes/admin.js      admin use cases        (Abhinav; reports: Devansh)
   server/test/      API + database tests (npm test); helpers.js, one file per area
   client/src/
     App.jsx         every page and who may open it

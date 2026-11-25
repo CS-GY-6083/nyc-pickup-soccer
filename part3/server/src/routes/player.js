@@ -1,7 +1,7 @@
 // Player use cases (spec: Customer). Organizers can use these too,
 // since they also play. Mounted at /api/player behind
 // requireRole('player', 'organizer'), so req.user is always set here.
-// Owner: Devash
+// Owner: Devansh
 //
 // Planned endpoints (see part3/docs/WORK_PLAN.md):
 //   GET    /api/player/games              1. My games: upcoming by default; ?when=past, ?from=&to=, ?borough=, ?fieldId=

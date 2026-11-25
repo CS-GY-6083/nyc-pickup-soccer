@@ -241,7 +241,7 @@ ORDER BY start_time, closure_id;
 ```
 And its upcoming games, from the shared game list with `UPCOMING AND f.field_id = $1`.
 
-## Player (Devash)
+## Player (Devansh)
 
 Player routes are in `server/src/routes/player.js`, mounted behind
 `requireRole('player', 'organizer')`; organizers can use the same pages because
@@ -431,7 +431,7 @@ custom range. `generate_series` returns every calendar month, including zeroes,
 and a left join adds the number of sign-up events and registrations that remain
 active. The page shows the totals plus an accessible monthly chart/table.
 
-## Admin (Abhinav; reports: Devash)
+## Admin (Abhinav; reports: Devansh)
 
 All admin routes are in `server/src/routes/admin.js`, mounted behind `requireRole('admin')`; the SQL is in `server/src/lib/admin.js`. Tests: `server/test/admin.test.js` (they create their own bookings, fields and closures and delete them afterwards).
 
@@ -545,7 +545,7 @@ Rosters show names only, never email addresses.
 ### Admin home: `GET /api/admin/summary`
 Four counts in one query of scalar subqueries: bookings waiting for review, upcoming games, fields, and closures now or coming up.
 
-### A5. Reports (Devash)
+### A5. Reports (Devansh)
 
 `GET /api/admin/reports?from=&to=` returns every A5 report in one response. A
 missing range means the year ending today; both ends are inclusive. The client
