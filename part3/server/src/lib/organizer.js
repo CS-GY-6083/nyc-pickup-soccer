@@ -125,7 +125,8 @@ SELECT r.reservation_id,
        r.status AS booking_status,
        r.start_time,
        r.end_time,
-       r.start_time <= nyc_now() AS kicked_off
+       r.start_time <= nyc_now() AS kicked_off,
+       r.end_time   <= nyc_now() AS ended
 FROM Reservation r
 JOIN PickupGame g ON g.reservation_id = r.reservation_id
 WHERE g.game_id = $1 AND g.organizer_id = $2
@@ -141,6 +142,13 @@ export const COMPLETE_GAME_SQL = `
 UPDATE PickupGame SET status = 'completed'
 WHERE game_id = $1
 RETURNING game_id, status`;
+
+// O3 "delayed" / "on time" (spec: change a flight's status). The game stays
+// scheduled either way; chk_game_delay_note keeps a note only while delayed.
+export const SET_GAME_DELAY_SQL = `
+UPDATE PickupGame SET delayed = $2, delay_note = $3
+WHERE game_id = $1
+RETURNING game_id, status, delayed, delay_note`;
 
 export const CANCEL_BOOKING_SQL = `
 UPDATE Reservation SET status = 'cancelled'

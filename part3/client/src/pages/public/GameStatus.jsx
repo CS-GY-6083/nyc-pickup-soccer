@@ -8,8 +8,8 @@ import { Link, useSearchParams } from 'react-router';
 import { ArrowRight, Search } from 'lucide-react';
 import { api } from '../../api.js';
 import {
-  FieldOptions, Board, BoardRow, Button, CARD, EmptyState, GAME_STATES, Icon, LABEL, LiveDot, MyStatus, Notice, Page, SectionHeading,
-  Segmented, SelectField, Skeleton, TextField, gameState, myStatus,
+  FieldOptions, Board, BoardRow, Button, CARD, DelayedTag, EmptyState, GAME_STATES, Icon, LABEL, LiveDot, MyStatus, Notice, Page,
+  SectionHeading, Segmented, SelectField, Skeleton, TextField, delayInfo, gameState, myStatus,
 } from '../../components/v2/index.js';
 import { formatSlot, todayInNewYork } from '../../format.js';
 import { fieldPhoto } from '../../lib/fieldPhotos.js';
@@ -27,6 +27,7 @@ const TONE_TEXT = { go: 'text-accent-ink', wait: 'text-warning', stop: 'text-des
 function StatusResult({ game }) {
   const s = gameState(game.game_state);
   const mine = myStatus(game);
+  const delay = delayInfo(game);
   return (
     <article aria-label={`Game ${game.game_id}`} className="flex flex-col gap-3">
       <Board label={`Game ${game.game_id}`}>
@@ -39,6 +40,12 @@ function StatusResult({ game }) {
             {s.label}
           </p>
           <p className="mt-2 max-w-[52ch] text-muted-foreground">{s.detail}</p>
+          {delay && (
+            <div className="mt-3 flex flex-col items-start gap-1.5">
+              <DelayedTag game={game} surface="card" />
+              <p className="max-w-[52ch] text-[14px] text-muted-foreground">{delay.detail}</p>
+            </div>
+          )}
           {mine && (
             <div className="mt-3 flex flex-col items-start gap-1.5">
               <MyStatus game={game} surface="card" />
@@ -218,6 +225,13 @@ export default function GameStatus() {
               <span className="text-[14px] text-flap-muted">{s.detail}</span>
             </li>
           ))}
+          {/* Not a state of its own: a flag beside "Game on", "Waiting on the field" or "In play". */}
+          <li className="grid items-start gap-x-4 gap-y-1 rounded-[16px] bg-[oklch(from_var(--flap-text)_l_c_h/0.035)] px-4 py-3 sm:grid-cols-[220px_1fr] @4xl:col-span-full">
+            <span><DelayedTag game={{ delayed: true, game_state: 'confirmed' }} /></span>
+            <span className="text-[14px] text-flap-muted">
+              Shown beside a game its organizer has marked as running late. The game still goes ahead, and players can still join.
+            </span>
+          </li>
         </Board>
       </section>
     </Page>

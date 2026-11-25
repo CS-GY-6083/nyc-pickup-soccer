@@ -67,8 +67,8 @@ GRANT INSERT ON GameRating       TO soccer_app;  -- U5 rate a game
 -- (the row locks in A1, U3, O3) also needs UPDATE on the locked table.
 GRANT UPDATE (status, reviewed_by, reviewed_at, rejection_reason)
     ON Reservation      TO soccer_app;  -- A1 approve/reject; O3 cancel
-GRANT UPDATE (status)
-    ON PickupGame       TO soccer_app;  -- O3 completed/cancelled; A1 reject cancels the game
+GRANT UPDATE (status, delayed, delay_note)
+    ON PickupGame       TO soccer_app;  -- O3 completed/cancelled/delayed; A1 reject cancels the game
 GRANT UPDATE (registration_status, joined_at)
     ON GameRegistration TO soccer_app;  -- U4 leave, U3 re-join; A1 reject cancels sign-ups
 GRANT UPDATE (rating, comment)

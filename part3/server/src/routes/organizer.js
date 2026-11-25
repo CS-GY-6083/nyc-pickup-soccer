@@ -12,8 +12,10 @@
 //                                                  check opening hours + closures + approved overlaps (Part 2 Q2's CASE),
 //                                                  INSERT Reservation (pending) RETURNING id, then INSERT PickupGame.
 //                                                  The spec wants this page to also list my games in the next 30 days.
-//   POST   /api/organizer/games/:id/status      3. Change status: 'completed' (after kickoff, booking approved)
-//                                                  or 'cancelled' (also cancel booking + registrations)
+//   POST   /api/organizer/games/:id/status      3. Change status: 'completed' (after kickoff, booking approved),
+//                                                  'cancelled' (before kickoff; also cancel booking + registrations),
+//                                                  or 'delayed' / 'on_time' (spec: on-time <-> delayed; the game
+//                                                  stays scheduled, with an optional note for players)
 //                                                  Lock order (same as admin approve/reject): lock the Reservation
 //                                                  row FOR UPDATE first, then the PickupGame row.
 //   GET    /api/organizer/ratings               4. Average rating per game + all comments (GameRating)
@@ -29,12 +31,12 @@ import {
   COMPLETE_GAME_SQL, CREATE_GAME_CHECK_SQL, FIELD_DAY_SQL, FREQUENT_PLAYERS_SQL,
   INSERT_GAME_SQL, INSERT_RESERVATION_SQL, OPEN_SLOTS_SQL, ORGANIZER_BOOKING_FOR_UPDATE_SQL,
   ORGANIZER_GAME_FOR_UPDATE_SQL, ORGANIZER_GAME_SQL, ORGANIZER_PLAYER_SQL,
-  ORGANIZER_RATINGS_SQL, ORGANIZER_REPORT_SQL, ORGANIZER_ROSTER_SQL,
+  ORGANIZER_RATINGS_SQL, ORGANIZER_REPORT_SQL, ORGANIZER_ROSTER_SQL, SET_GAME_DELAY_SQL,
 } from '../lib/organizer.js';
 import { resolveReportRange } from '../lib/reports.js';
 import {
   BOROUGHS, FORMATS, SKILL_LEVELS, checkDateOrder, optionalChoice, optionalDate,
-  optionalId, requireChoice, requireDate, requireDateTime, requireId, requireNumber,
+  optionalId, optionalText, requireChoice, requireDate, requireDateTime, requireId, requireNumber,
 } from '../lib/validate.js';
 
 const router = Router();
@@ -125,10 +127,14 @@ router.post('/games', async (req, res) => {
   res.status(201).json({ game: result, message: `Game #${result.game_id} was created. Its field booking is waiting for admin approval.` });
 });
 
-// POST /api/organizer/games/:id/status  { status: completed|cancelled }
+// POST /api/organizer/games/:id/status
+//   { status: completed | cancelled | delayed | on_time, note? }
+// 'delayed' (with an optional note for players) and 'on_time' are the
+// spec's "on-time to delayed or vice versa": the game stays scheduled.
 router.post('/games/:id/status', async (req, res) => {
   const gameId = requireId(req.params.id, 'Game');
-  const status = requireChoice(req.body?.status, 'Status', ['completed', 'cancelled']);
+  const status = requireChoice(req.body?.status, 'Status', ['completed', 'cancelled', 'delayed', 'on_time']);
+  const note = status === 'delayed' ? optionalText(req.body?.note, 'Note', 200) : null;
 
   const result = await withTransaction(async (client) => {
     const bookingResult = await client.query(ORGANIZER_BOOKING_FOR_UPDATE_SQL, [gameId, req.user.id]);
@@ -137,6 +143,13 @@ router.post('/games/:id/status', async (req, res) => {
     const gameResult = await client.query(ORGANIZER_GAME_FOR_UPDATE_SQL, [gameId, req.user.id]);
     const game = gameResult.rows[0];
     if (game.status !== 'scheduled') throw new HttpError(409, `This game is already ${game.status}.`);
+
+    if (status === 'delayed' || status === 'on_time') {
+      if (booking.ended) throw new HttpError(409, 'This game has already finished, so it can\'t be marked delayed or on time.');
+      const delayed = status === 'delayed';
+      const { rows } = await client.query(SET_GAME_DELAY_SQL, [gameId, delayed, note]);
+      return { game: rows[0], signups_cancelled: 0 };
+    }
 
     if (status === 'completed') {
       if (booking.booking_status !== 'approved') throw new HttpError(409, 'Only a game with an approved field booking can be completed.');
@@ -158,9 +171,13 @@ router.post('/games/:id/status', async (req, res) => {
     return { game: rows[0], signups_cancelled: signups.rowCount };
   });
 
-  const message = status === 'completed'
-    ? `Game #${gameId} was marked completed.`
-    : `Game #${gameId} was called off. ${result.signups_cancelled} active ${result.signups_cancelled === 1 ? 'sign-up was' : 'sign-ups were'} cancelled.`;
+  const cancelled = result.signups_cancelled;
+  const message = {
+    completed: `Game #${gameId} was marked completed.`,
+    cancelled: `Game #${gameId} was called off. ${cancelled} active ${cancelled === 1 ? 'sign-up was' : 'sign-ups were'} cancelled.`,
+    delayed: `Game #${gameId} is marked delayed. Players see it on the game's status.`,
+    on_time: `Game #${gameId} is back on time.`,
+  }[status];
   res.json({ ...result, message });
 });
 

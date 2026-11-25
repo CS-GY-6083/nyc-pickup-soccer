@@ -13,8 +13,9 @@ import FieldPhoto from './FieldPhoto.jsx';
 import { FlapWord, TimeTiles } from './FlapTile.jsx';
 import Icon from './Icon.jsx';
 import LiveDot from './LiveDot.jsx';
+import DelayedTag from './DelayedTag.jsx';
 import MyStatus from './MyStatus.jsx';
-import { capacity, FLAP_TONE, gameState, isUpcoming, myStatusText } from './gameState.js';
+import { capacity, delayInfo, FLAP_TONE, gameState, isUpcoming, myStatusText } from './gameState.js';
 
 // Wide boards (container >= 56rem) put every row on one line. Rows are
 // subgrids of the board's grid, so every column lines up like a ruler and
@@ -102,6 +103,7 @@ export default function BoardRow({
   const big = size === 'lg';
   const when = `${formatDate(game.start_time)}, ${formatTime(game.start_time)}`;
   const mine = myStatusText(game);
+  const delayed = delayInfo(game);
   const chevron = href ? (
     <Icon
       icon={ChevronRight}
@@ -148,6 +150,7 @@ export default function BoardRow({
         )}
       >
         <StatusWords state={game.game_state} size={big ? 'lg' : 'md'} />
+        <DelayedTag game={game} />
         <MyStatus game={game} />
       </div>
 
@@ -168,6 +171,7 @@ export default function BoardRow({
                 Game #{game.game_id}, {when}, at{' '}
               </span>
               {game.field_name}
+              {delayed && <span className="sr-only">, delayed</span>}
               {mine && <span className="sr-only">, {mine}</span>}
             </RowLink>
           ) : (

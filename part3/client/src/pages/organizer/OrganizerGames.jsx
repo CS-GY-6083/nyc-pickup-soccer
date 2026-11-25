@@ -5,8 +5,8 @@ import { Link } from 'react-router';
 import { ChevronDown, RotateCcw, Search } from 'lucide-react';
 import { api } from '../../api.js';
 import {
-  BoroughBullet, Button, CARD, EmptyState, FieldOptions, Icon, Notice, Page,
-  SelectField, Skeleton, StatusWords, TextField,
+  BoroughBullet, Button, CARD, DelayedTag, EmptyState, FieldOptions, Icon, Notice, Page,
+  SelectField, Skeleton, StatusWords, TextField, delayInfo,
 } from '../../components/v2/index.js';
 import { BOROUGHS } from '../../constants.js';
 import { formatDate, formatTime } from '../../format.js';
@@ -56,13 +56,17 @@ function HostedGame({ game, onChanged }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState('');
   const [actionError, setActionError] = useState('');
+  const [delayOpen, setDelayOpen] = useState(false);
+  const [note, setNote] = useState('');
 
-  async function changeStatus(status) {
+  async function changeStatus(status, extra = {}) {
     if (status === 'cancelled' && !window.confirm(`Call off game #${game.game_id} and cancel its active sign-ups?`)) return;
     setSaving(status);
     setActionError('');
     try {
-      await api(`/organizer/games/${game.game_id}/status`, { method: 'POST', body: { status } });
+      await api(`/organizer/games/${game.game_id}/status`, { method: 'POST', body: { status, ...extra } });
+      setDelayOpen(false);
+      setNote('');
       onChanged();
     } catch (err) {
       setActionError(err.message);
@@ -76,6 +80,9 @@ function HostedGame({ game, onChanged }) {
   const playedOnField = game.booking_status === 'approved' && ['in_progress', 'finished'].includes(game.game_state);
   const canComplete = game.game_status === 'scheduled' && playedOnField;
   const canCancel = game.game_status === 'scheduled' && !playedOnField;
+  // On time <-> delayed (spec: change a flight's status) until full time.
+  const canDelay = game.game_status === 'scheduled' && ['confirmed', 'pending_field', 'in_progress'].includes(game.game_state);
+  const delay = delayInfo(game);
   return (
     <li className="px-4 py-4">
       <div className="grid items-center gap-3 lg:grid-cols-[150px_minmax(0,1fr)_auto_minmax(0,auto)]">
@@ -93,12 +100,24 @@ function HostedGame({ game, onChanged }) {
             </p>
           </div>
         </div>
-        <div>
+        <div className="flex flex-col items-start">
           <StatusWords state={game.game_state} />
+          {delay && <DelayedTag game={game} surface="card" className="mt-1.5" />}
+          {delay?.note && <p className="mt-1 max-w-[28ch] text-[12px] text-muted-foreground">{delay.note}</p>}
           <p className="mt-1 text-[12px] font-medium text-muted-foreground">Booking: {game.booking_status}</p>
         </div>
         <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
           {canComplete && <Button size="sm" onClick={() => changeStatus('completed')} disabled={Boolean(saving)}>{saving === 'completed' ? 'Saving…' : 'Complete'}</Button>}
+          {canDelay && !game.delayed && (
+            <Button size="sm" variant="secondary" onClick={() => setDelayOpen((value) => !value)} aria-expanded={delayOpen} disabled={Boolean(saving)}>
+              Mark delayed
+            </Button>
+          )}
+          {canDelay && game.delayed && (
+            <Button size="sm" variant="secondary" onClick={() => changeStatus('on_time')} disabled={Boolean(saving)}>
+              {saving === 'on_time' ? 'Saving…' : 'Back on time'}
+            </Button>
+          )}
           {canCancel && <Button size="sm" variant="danger" onClick={() => changeStatus('cancelled')} disabled={Boolean(saving)}>{saving === 'cancelled' ? 'Cancelling…' : 'Cancel'}</Button>}
           <Button size="sm" variant="secondary" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
             Roster
@@ -106,6 +125,23 @@ function HostedGame({ game, onChanged }) {
           </Button>
         </div>
       </div>
+      {delayOpen && canDelay && !game.delayed && (
+        <form
+          className="mt-3 flex flex-wrap items-end gap-2 rounded-xl bg-surface-2 p-3 dark:bg-surface-3"
+          onSubmit={(event) => { event.preventDefault(); changeStatus('delayed', { note }); }}
+        >
+          <TextField
+            label="Note for players (optional)"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            maxLength={200}
+            placeholder="e.g. Starting about 20 minutes late"
+            className="min-w-[16rem] flex-1"
+          />
+          <Button type="submit" size="sm" disabled={Boolean(saving)}>{saving === 'delayed' ? 'Saving…' : 'Save'}</Button>
+          <Button type="button" size="sm" variant="quiet" onClick={() => { setDelayOpen(false); setNote(''); }}>Never mind</Button>
+        </form>
+      )}
       {actionError && <Notice type="error" className="mt-3">{actionError}</Notice>}
       {open && <div className="mt-4 rounded-xl bg-surface-2 p-4 dark:bg-surface-3"><Roster gameId={game.game_id} /></div>}
     </li>

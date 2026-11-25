@@ -415,6 +415,27 @@ UPDATE PickupGame SET status = 'cancelled' ...;
 UPDATE GameRegistration SET registration_status = 'cancelled' ...;
 ```
 
+**Delayed or on time** (spec: "changes a flight status from on-time to delayed
+or vice versa"). The same endpoint takes `{ status: 'delayed', note? }` or
+`{ status: 'on_time' }`. A delayed game is still on: it stays `scheduled`,
+players can still join, and it keeps its state ("Game on", "Waiting on the
+field" or "In play"). So "delayed" is a flag beside the status, not another
+status value, and none of the queries that look for `status = 'scheduled'`
+change. Allowed until the game's end time, under the same booking-then-game
+locks. `chk_game_delay_note` keeps a note only while the game is delayed, and
+every game list returns `delayed` and `delay_note`, so the "Delayed" tag shows
+on public Game status (P2), the boards and the organizer's list.
+
+```sql
+UPDATE PickupGame SET delayed = $2, delay_note = $3
+WHERE game_id = $1
+RETURNING game_id, status, delayed, delay_note;
+```
+
+The live database got the two columns from `db/migrations/001_game_delayed.sql`
+(`ALTER TABLE ... ADD COLUMN IF NOT EXISTS` plus the column grant), so its data
+was kept. A fresh `db/reset.sh` has them already.
+
 ### O4. Ratings: `GET /api/organizer/ratings`
 
 A grouped query keeps every hosted game, computes `AVG(GameRating.rating)` and

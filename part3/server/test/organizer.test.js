@@ -223,7 +223,42 @@ describe('O3. complete or cancel a hosted game', () => {
   test('refuses an early completion, another organizer\'s game and bad status', async () => {
     assert.equal((await organizer.post('/organizer/games/12/status', { status: 'completed' })).status, 409);
     assert.equal((await organizer.post('/organizer/games/2/status', { status: 'cancelled' })).status, 404);
-    assert.equal((await organizer.post('/organizer/games/1/status', { status: 'delayed' })).status, 400);
+    assert.equal((await organizer.post('/organizer/games/1/status', { status: 'postponed' })).status, 400);
+  });
+});
+
+describe('O3. delayed or on time (spec: on-time <-> delayed)', () => {
+  test('marks an upcoming game delayed with a note, shown on its public status, then back on time', async () => {
+    const fx = await makeHostedGame({ start: '2026-11-27 18:00', end: '2026-11-27 20:00', players: [13] });
+    const note = 'Field lights are being fixed: about 20 minutes late.';
+    const res = await organizer.post(`/organizer/games/${fx.gameId}/status`, { status: 'delayed', note });
+    assert.equal(res.status, 200, JSON.stringify(res.data));
+    assert.deepEqual(
+      { delayed: res.data.game.delayed, note: res.data.game.delay_note, status: res.data.game.status },
+      { delayed: true, note, status: 'scheduled' },
+    );
+    assert.match(res.data.message, /delayed/);
+
+    const status = await server.client().get('/public/status', { gameId: fx.gameId });
+    assert.equal(status.status, 200);
+    assert.equal(status.data.games[0].delayed, true);
+    assert.equal(status.data.games[0].delay_note, note);
+    assert.equal(status.data.games[0].signed_up, 1, 'sign-ups are untouched');
+
+    const back = await organizer.post(`/organizer/games/${fx.gameId}/status`, { status: 'on_time', note: 'ignored' });
+    assert.equal(back.status, 200, JSON.stringify(back.data));
+    assert.equal(back.data.game.delayed, false);
+    assert.equal(back.data.game.delay_note, null);
+  });
+
+  test('refuses a finished game, another organizer\'s game and an over-long note', async () => {
+    const past = await makeHostedGame({ start: '2026-11-13 08:00', end: '2026-11-13 10:00' });
+    const finished = await organizer.post(`/organizer/games/${past.gameId}/status`, { status: 'delayed' });
+    assert.equal(finished.status, 409);
+    assert.match(finished.data.error, /already finished/);
+
+    assert.equal((await organizer.post('/organizer/games/2/status', { status: 'delayed' })).status, 404);
+    assert.equal((await organizer.post('/organizer/games/12/status', { status: 'delayed', note: 'x'.repeat(201) })).status, 400);
   });
 });
 

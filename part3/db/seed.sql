@@ -177,6 +177,13 @@ INSERT INTO PickupGame (game_id, organizer_id, reservation_id, format, skill_lev
     (23, 4, 23, '5v5',   'beginner',     10, 'cancelled'),  -- booking rejected: field closure 3
     (24, 5, 24, '6v6',   'all levels',   14, 'cancelled');  -- withdrawn by the organizer before review
 
+-- Game 16 is running late: still on (players can join), but marked
+-- delayed by its organizer, like a delayed flight (O3).
+UPDATE PickupGame
+SET delayed = true,
+    delay_note = 'Kick-off pushed back about 30 minutes while the game before us finishes.'
+WHERE game_id = 16;
+
 -- ---------------------------------------------------------------------
 -- GameRegistration: player sign-ups
 -- 'cancelled' means the player left the game, or the game was called
