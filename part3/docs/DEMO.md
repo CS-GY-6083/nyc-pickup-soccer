@@ -43,7 +43,9 @@ The spec says the demo "will mainly consist of running application on a bunch of
 | 13 | **Rate** a game not yet played (U5) | Refused by the database trigger. A played game can be rated once, 1–5 stars, with a comment. |
 | 14 | **My activity** (U6) | Total for the past year plus a chart of the last 6 months; a custom range changes both. |
 
-U5 and U6 are still being built (Devansh). Check these two rows again before the demo.
+U5 and U6 are complete and covered by the player API tests. For U5, use an
+unrated completed game in the reset seed data so the one-rating-per-game rule
+does not block the successful demo step.
 
 ## Organizer (O1–O6), as Kwame
 

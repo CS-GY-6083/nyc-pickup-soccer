@@ -1,15 +1,30 @@
 # Team update: Nov 25, 2026
 
-From Abhinav to Jason and Devansh.
+Shared team status for Abhinav, Jason and Devansh.
 
-## New on Nov 25 (all merged and live)
+## Follow-up completed Nov 25 (merge and redeploy next)
+
+- **U5 ratings:** eligible completed games, one 1–5-star rating and optional
+  comment per player/game, with the database trigger still enforcing the rule.
+- **U6 activity:** past-year totals, a six-calendar-month chart/table, and
+  custom inclusive ranges for games and hours played.
+- **A5 comparison:** past-month and past-year field-usage totals now appear
+  together, independent of the selected detail range.
+- **O6:** the Past month preset is included.
+- **Windows setup:** `.env.example` now explains PostgreSQL credentials and
+  reserved URL characters. `npm test` works from VS Code PowerShell and safely
+  rebuilds only `nyc_fields_test`.
+- **Verification:** production client build passed and all 215 server/database
+  tests passed locally with PostgreSQL 19.
+
+## Earlier on Nov 25 (merged and live)
 
 - **Delayed status (O3, PR #5).** The spec's "change status: on time ↔ delayed". On Hosted games, organizers can mark a game delayed, with a note for players, or back on time. It shows as a "Delayed" tag on every game list and on Game status.
   - It's a flag beside the status (`PickupGame.delayed`, `delay_note`), not a new status value, so every `status = 'scheduled'` query still works.
   - The live database got it through `db/migrations/001_game_delayed.sql`, so no data was lost.
 - **Fixes (PR #4):**
   - A game that kicked off on its approved field can no longer be called off; mark it completed instead.
-  - Report date ranges are capped at 5 years. **Devansh: use `resolveReportRange` from `server/src/lib/reports.js` for U6.**
+  - Report date ranges are capped at 5 years. U6 now uses the same `resolveReportRange` helper as O6 and A5.
 - **Robustness and security (PRs #6, #7):**
   - "Please try again" messages instead of 500s when the database is busy, and time limits on the live database login.
   - Sessions end 8 hours after login.
@@ -24,7 +39,7 @@ From Abhinav to Jason and Devansh.
   - [`SCHEMA.md`](SCHEMA.md): schema and ER diagram;
   - [`FILES.md`](FILES.md): every file;
   - the missing SQL in [`USE_CASES.md`](USE_CASES.md) for O4–O6 and A5. Jason and Devansh, please check yours.
-- **Server tests:** 210 now. **If you pull:** run `db/reset.sh` once for the new columns.
+- **Server tests:** 215 now. **If you pull:** run `db/reset.sh` once for the new columns.
 
 ## Nov 24
 
@@ -48,27 +63,23 @@ Hosted on Vercel with a Neon Postgres database. Demo logins from `db/seed.sql`:
 
 ## Done so far
 
-- **Base app:** Express API and React app, logins checked with md5 (as the spec says), sessions stored in Postgres, role checks on every request, shared game-list SQL, the date-shift script, and 210 server tests (run with the live site's limited database permissions).
+- **Base app:** Express API and React app, logins checked with md5 (as the spec says), sessions stored in Postgres, role checks on every request, shared game-list SQL, the date-shift script, and 215 server tests (run with the live site's limited database permissions).
 - **Database:** the `GameState` view for game states, and the `soccer_app` / `soccer_readonly` roles with a restricted login for the live site.
 - **Public pages (Abhinav):** search upcoming games (P1), game status by game number or by field and date (P2), register, log in, log out and the goodbye page (P3–P5).
 - **Field map and field pages (Abhinav):** every field with its game counts, filters, and a "near me" sort using distances computed in SQL, plus opening hours and closures.
 - **Admin A1–A4 (Abhinav):** approve or reject field bookings with conflict checks, add fields with their hours, add closures, and see all games with rosters.
 - **Organizer O1–O6 (Jason):** hosted games with rosters, create a game from a field's open slots (booking and game in one transaction), mark a game completed or cancelled, ratings, frequent players, and sign-up reports.
-- **Player U1–U4 (Devansh):** my games, search and join (the last spot is locked, so two people can't both take it), and leave more than 24 hours before kickoff.
-- **Admin reports A5 (Devansh):** field usage hours, bookings per month, breakdowns by borough, format and skill level, and the most active players.
+- **Player U1–U6:** my games, search and join (the last spot is locked, so two people can't both take it), leave more than 24 hours before kickoff, rate completed games, and activity totals/charts.
+- **Admin reports A5:** field usage hours, simultaneous month/year totals, bookings per month, breakdowns by borough, format and skill level, and the most active players.
 - **Personal status:** "You're in" / "You left" on game lists for logged-in players.
 - **Real data:** 352 NYC soccer fields from NYC Open Data (NYC Parks Athletic Facilities), plus our 12 seed fields, for 364 in total.
 - **Docs:** every built use case and its queries are in [`USE_CASES.md`](USE_CASES.md).
 
 ## Still to do
 
-**Devansh: the last two player use cases, and A5's totals**
-- **U5 rate games.** `/player/ratings` still shows "coming soon". The planned endpoint is in the comments at the top of [`server/src/routes/player.js`](../server/src/routes/player.js). The database already allows it (`GameRating` grants in `db/roles.sql`), and the trigger in `db/schema.sql` refuses games that aren't over or that the player left.
-- **U6 my activity.** `/player/activity` still shows "coming soon".
-  - [`MonthlyBarChart`](../client/src/components/MonthlyBarChart.jsx) is ready for the monthly chart; `OrganizerReports.jsx` and `AdminReports.jsx` use it.
-  - Use `resolveReportRange` (`server/src/lib/reports.js`) for the date range.
-  - The spec's default: total for the past year, plus a chart of the last 6 months.
-- **A5:** show the last-month **and** last-year totals together (spec: "earned revenue in the last month and last year").
+The required application use cases are complete. Merge the follow-up PR,
+redeploy it, smoke-test all three demo logins, then finish the hand-in artifacts
+and rehearsal below.
 
 **Jason**
 - O6 "Past month" report preset: completed in `dev_jason_followup` (spec: "last year / last month").

@@ -23,7 +23,7 @@ It uses React, Express and PostgreSQL 17, and runs at https://nyc-pickup-soccer.
   - Every transaction locks the booking first, then the game, then the sign-ups, in the same order everywhere, so organizer and admin actions can't deadlock each other.
 - **Least privilege.**
   - The live site connects as a login that can read, add rows and change only the status columns the use cases need. It can't delete game data or change anyone's role.
-  - The 210 server tests run with exactly those permissions, so a missing permission fails a test before it reaches the live site.
+  - The 215 server tests run with exactly those permissions, so a missing permission fails a test before it reaches the live site.
 - **The spec's security requirements:**
   - prepared statements everywhere;
   - roles checked on the server on every request;
@@ -38,14 +38,14 @@ It uses React, Express and PostgreSQL 17, and runs at https://nyc-pickup-soccer.
 - **Translating the airline spec.** Prices, round trips and "add airport" have no natural meaning for free pickup games; the choices are explained in `SPEC_MAPPING.md`. "Delayed" became a flag beside the game's status, so a delayed game still counts as on.
 - **md5.** The spec requires md5 for passwords. It is fast and unsalted, so it is not safe for a real product; we would use argon2id instead.
 - **Team workflow.** Early on, most code went straight to `main`. The organizer and player work later came in as one large pull request each. Smaller, earlier pull requests would have made reviews and the history easier to follow.
-- **Timing.** U5 and U6 were left until the end of the schedule.
+- **Timing.** U5 and U6 were left until the end of the schedule, increasing integration risk even though they were completed before feature freeze.
 
 ## Known limitations
 
 - Demo accounts with published passwords exist on the live site, so that the professor can log in. A real launch would remove them.
 - Lists stop at 200 rows; there is no paging yet.
 - `db/reset.sh` rebuilds the database from scratch. Live schema changes go through hand-written migration files (`db/migrations/`).
-- The client has no automated tests; the 210 tests cover the server and the database.
+- The client has no automated tests; the 215 tests cover the server and the database.
 
 ## Future work
 

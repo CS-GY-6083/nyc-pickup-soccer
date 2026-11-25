@@ -18,6 +18,26 @@ JOIN PickupGame g ON g.reservation_id = r.reservation_id
 WHERE r.start_time >= $1::date
   AND r.start_time < $2::date + INTERVAL '1 day'`;
 
+// The mapped equivalent of the airline spec's month/year revenue totals:
+// this free app reports approved, non-cancelled field-usage hours. These
+// two figures are returned together regardless of the selected detail range.
+export const ADMIN_PERIOD_COMPARISON_SQL = `
+SELECT ROUND(COALESCE(SUM(EXTRACT(EPOCH FROM (r.end_time - r.start_time)) / 3600)
+                      FILTER (WHERE r.status = 'approved'
+                                    AND g.status <> 'cancelled'
+                                    AND r.start_time >= nyc_now() - INTERVAL '1 month'), 0), 1)
+           AS last_month_usage_hours,
+       ROUND(COALESCE(SUM(EXTRACT(EPOCH FROM (r.end_time - r.start_time)) / 3600)
+                      FILTER (WHERE r.status = 'approved'
+                                    AND g.status <> 'cancelled'
+                                    AND r.start_time >= nyc_now() - INTERVAL '1 year'), 0), 1)
+           AS last_year_usage_hours,
+       COUNT(*) FILTER (WHERE r.start_time >= nyc_now() - INTERVAL '1 month') AS last_month_bookings,
+       COUNT(*) FILTER (WHERE r.start_time >= nyc_now() - INTERVAL '1 year') AS last_year_bookings
+FROM Reservation r
+JOIN PickupGame g ON g.reservation_id = r.reservation_id
+WHERE r.start_time < nyc_now() + INTERVAL '1 day'`;
+
 export const BOOKINGS_BY_MONTH_SQL = `
 WITH months AS (
     SELECT generate_series(date_trunc('month', $1::date),

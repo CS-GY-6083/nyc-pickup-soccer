@@ -41,8 +41,8 @@ The course's Part 3 use cases are written for the Air Ticket Reservation System.
 | 2. Search for flights | **U2** Search upcoming games, showing which ones I joined | Done |
 | 3. Purchase tickets | **U3** Join a game: capacity check with a row lock (Part 2 Q11); re-join after leaving | Done |
 | 4. Cancel trip (more than 24 hours ahead; the seat is sold again) | **U4** Leave a game more than 24 hours before kick-off; the spot opens again | Done |
-| 5. Rate and comment on previous flights | **U5** Rate and comment on games I played | To do (Devansh). The database rule is in place. |
-| 6. Track my spending (past year total, last 6 months by month; custom range) | **U6** My activity: games and hours played, same defaults | To do (Devansh) |
+| 5. Rate and comment on previous flights | **U5** Rate and comment once on completed games I played; database trigger enforces eligibility | Done |
+| 6. Track my spending (past year total, last 6 months by month; custom range) | **U6** My activity: games and hours played, same defaults | Done |
 | 7. Logout, goodbye page | **P5** Logout: session destroyed, goodbye page | Done |
 
 ### Airline Staff → Organizer and Admin
@@ -57,7 +57,7 @@ The course's Part 3 use cases are written for the Air Ticket Reservation System.
 | 6. View flight ratings (average and all comments) | **O4** Average rating per game and every comment | Done |
 | 7. Frequent customers in the last year; all flights of one customer | **O5** Frequent players in the last year; all games one player played with me | Done |
 | 8. View reports: tickets sold by date range / last year / last month, by month | **O6** Sign-ups: Past year, Past month or a custom range, by month. **A5**: bookings by month | Done (Past month preset: Jason) |
-| 9. View earned revenue: last month and last year | **A5** Field usage hours, plus breakdowns by borough, format and skill, and the most active players | Partly done: selectable Past month and Past year reports work; showing both totals together remains (Devansh) |
+| 9. View earned revenue: last month and last year | **A5** Last-month and last-year field-usage hours shown together, plus breakdowns by borough, format and skill, and the most active players | Done |
 | 10. Logout | **P5** | Done |
 | Extra | **A1** Approve or reject field bookings, with conflict checks (overlaps refused by the database, Part 2 Q10) | Done |
 
@@ -70,7 +70,7 @@ The course's Part 3 use cases are written for the Air Ticket Reservation System.
 | Prepared statements | Every value is a `$n` parameter. SQL injection attempts are tested (`auth.test.js`, `public.test.js`, `fields.test.js`). |
 | Prevent cross-site scripting | React escapes all text; no `innerHTML` anywhere; an enforced Content-Security-Policy. |
 | Usable interface | One home page per role; every list has filters, empty states and error messages. |
-| Invalid input | Server-side validation for every field (`server/src/lib/validate.js`); database CHECK constraints as the last line; 210 server tests. |
+| Invalid input | Server-side validation for every field (`server/src/lib/validate.js`); database CHECK constraints as the last line; 215 server tests. |
 | Extra tables or attributes merged into Part 2 | `GameRating`, and `PickupGame.delayed` / `delay_note`, are in `part2/create_tables.sql` and the relational schema. |
 
 ## Deviations, and why

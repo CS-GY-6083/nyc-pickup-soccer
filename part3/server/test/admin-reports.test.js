@@ -36,6 +36,9 @@ describe('A5. admin reports', () => {
     assert.ok(res.data.active_players.some((row) => row.name === 'Grace Kim'));
     assert.ok(res.data.summary.field_usage_hours > 0);
     assert.ok(res.data.summary.bookings > 0);
+    assert.ok(res.data.comparison.last_month_usage_hours > 0);
+    assert.ok(res.data.comparison.last_year_usage_hours >= res.data.comparison.last_month_usage_hours);
+    assert.ok(res.data.comparison.last_year_bookings >= res.data.comparison.last_month_bookings);
   });
 
   test('supports an inclusive custom range and checks its order', async () => {
@@ -44,6 +47,7 @@ describe('A5. admin reports', () => {
     assert.deepEqual(res.data.months.map((row) => row.month), ['2026-10']);
     assert.ok(res.data.summary.bookings > 0);
     assert.ok(res.data.active_players.length > 0);
+    assert.ok(res.data.comparison.last_year_usage_hours > 0, 'comparison is included with custom reports');
 
     assert.equal((await admin.get('/admin/reports', { from: '2026-12-01', to: '2026-11-01' })).status, 400);
     assert.equal((await admin.get('/admin/reports', { from: 'not-a-date' })).status, 400);

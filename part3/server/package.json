@@ -11,9 +11,9 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env --watch src/index.js",
     "start": "node --env-file-if-exists=.env src/index.js",
-    "test:db": "DATABASE_URL= SHIFT_DATES=0 OPEN_DATA_FIELDS=0 PGDATABASE=nyc_fields_test ../db/reset.sh && psql -q -v ON_ERROR_STOP=1 -d nyc_fields_test -f test/fake-clock.sql",
-    "test": "npm run test:db && DATABASE_URL=postgres://localhost/nyc_fields_test DB_SET_ROLE=soccer_app node --test --test-concurrency=1 \"test/**/*.test.js\"",
-    "test:coverage": "npm run test:db && DATABASE_URL=postgres://localhost/nyc_fields_test DB_SET_ROLE=soccer_app node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=\"src/**\" --test-coverage-lines=80 --test-coverage-branches=80 --test-coverage-functions=80 \"test/**/*.test.js\""
+    "test:db": "node --env-file-if-exists=.env test/run.mjs --db-only",
+    "test": "node --env-file-if-exists=.env test/run.mjs",
+    "test:coverage": "node --env-file-if-exists=.env test/run.mjs --coverage"
   },
   "dependencies": {
     "connect-pg-simple": "^10.0.0",

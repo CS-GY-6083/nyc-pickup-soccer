@@ -8,7 +8,6 @@ import { Route, Routes } from 'react-router';
 import RequireRole from './auth/RequireRole.jsx';
 import NavBar from './components/NavBar.jsx';
 import Flash from './components/Flash.jsx';
-import ComingSoon from './pages/ComingSoon.jsx';
 import NotFound from './pages/NotFound.jsx';
 import Home from './pages/public/Home.jsx';
 import GameStatus from './pages/public/GameStatus.jsx';
@@ -19,6 +18,8 @@ import Logout from './pages/public/Logout.jsx';
 import PlayerHome from './pages/player/PlayerHome.jsx';
 import PlayerGames from './pages/player/PlayerGames.jsx';
 import PlayerSearch from './pages/player/PlayerSearch.jsx';
+import PlayerRatings from './pages/player/PlayerRatings.jsx';
+import PlayerActivity from './pages/player/PlayerActivity.jsx';
 import OrganizerHome from './pages/organizer/OrganizerHome.jsx';
 import OrganizerGames from './pages/organizer/OrganizerGames.jsx';
 import CreateGame from './pages/organizer/CreateGame.jsx';
@@ -63,8 +64,8 @@ export default function App() {
           <Route path="/player" element={guard(['player'], <PlayerHome />)} />
           <Route path="/player/games" element={guard(PLAYERS, <PlayerGames />)} />
           <Route path="/player/search" element={guard(PLAYERS, <PlayerSearch />)} />
-          <Route path="/player/ratings" element={guard(PLAYERS, <ComingSoon title="Rate past games" />)} />
-          <Route path="/player/activity" element={guard(PLAYERS, <ComingSoon title="My activity" />)} />
+          <Route path="/player/ratings" element={guard(PLAYERS, <PlayerRatings />)} />
+          <Route path="/player/activity" element={guard(PLAYERS, <PlayerActivity />)} />
 
           {/* Organizer (Jason) */}
           <Route path="/organizer" element={guard(ORGANIZERS, <OrganizerHome />)} />
