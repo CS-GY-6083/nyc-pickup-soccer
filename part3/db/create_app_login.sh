@@ -4,7 +4,8 @@
 # can never drop or empty a table.
 #
 # Run once per database server, as the database owner, after reset.sh has
-# created the roles. Running it again only sets a new password.
+# created the roles. Running it again only sets a new password (and the
+# connection time limits below).
 #
 #   APP_DB_PASSWORD='<long random password>' \
 #   DATABASE_URL='<owner connection URL, unpooled>' ./create_app_login.sh
@@ -25,5 +26,12 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'soccer_web')
 SELECT format('ALTER ROLE soccer_web LOGIN PASSWORD %L', :'pw')
 \gexec
 GRANT soccer_app TO soccer_web;
+-- Limits on the app's own connections, so a slow query or a held lock
+-- cannot outlive the 15-second Vercel function (vercel.json) and keep
+-- others waiting. Errors from these become "please try again" messages
+-- (server/src/lib/errors.js: 57014, 55P03).
+ALTER ROLE soccer_web SET statement_timeout = '8s';
+ALTER ROLE soccer_web SET lock_timeout = '3s';
+ALTER ROLE soccer_web SET idle_in_transaction_session_timeout = '10s';
 SQL
 echo "soccer_web can log in, with the soccer_app privileges only."

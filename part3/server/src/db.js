@@ -57,6 +57,8 @@ export function query(text, params = []) {
  * Run several queries as one transaction. The callback gets a client;
  * use client.query(...) inside it. If the callback throws, everything is
  * rolled back and the error is re-thrown; otherwise it is committed.
+ * After a deadlock or serialization failure the whole callback runs once
+ * more, so keep everything it does inside the transaction.
  *
  *   const game = await withTransaction(async (client) => {
  *     await client.query('SELECT ... FOR UPDATE', [id]);
@@ -64,7 +66,23 @@ export function query(text, params = []) {
  *     return rows[0];
  *   });
  */
-export async function withTransaction(callback) {
+export async function withTransaction(callback, { retries = 1 } = {}) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await runTransaction(callback);
+    } catch (err) {
+      // A deadlock or serialization failure means another transaction got
+      // in the way, not that the request was wrong: run it once more from
+      // the start (everything from the first try was rolled back).
+      if (attempt < retries && RETRYABLE.has(err?.code)) continue;
+      throw err;
+    }
+  }
+}
+
+const RETRYABLE = new Set(['40001', '40P01']); // serialization_failure, deadlock_detected
+
+async function runTransaction(callback) {
   const client = await pool.connect();
   let broken; // set if the connection itself failed; it is then discarded
   try {

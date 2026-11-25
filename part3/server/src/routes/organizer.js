@@ -29,6 +29,7 @@ import { Where, gameListSql } from '../lib/games.js';
 import {
   CANCEL_BOOKING_SQL, CANCEL_HOSTED_GAME_SQL, CANCEL_HOSTED_SIGNUPS_SQL,
   COMPLETE_GAME_SQL, CREATE_GAME_CHECK_SQL, FIELD_DAY_SQL, FREQUENT_PLAYERS_SQL,
+  MAX_DAYS_AHEAD, MAX_PENDING_BOOKINGS,
   INSERT_GAME_SQL, INSERT_RESERVATION_SQL, OPEN_SLOTS_SQL, ORGANIZER_BOOKING_FOR_UPDATE_SQL,
   ORGANIZER_GAME_FOR_UPDATE_SQL, ORGANIZER_GAME_SQL, ORGANIZER_PLAYER_SQL,
   ORGANIZER_RATINGS_SQL, ORGANIZER_REPORT_SQL, ORGANIZER_ROSTER_SQL, SET_GAME_DELAY_SQL,
@@ -107,10 +108,14 @@ router.post('/games', async (req, res) => {
   }
 
   const result = await withTransaction(async (client) => {
-    const { rows } = await client.query(CREATE_GAME_CHECK_SQL, [fieldId, start, end]);
+    const { rows } = await client.query(CREATE_GAME_CHECK_SQL, [fieldId, start, end, MAX_DAYS_AHEAD, req.user.id]);
     if (rows.length === 0) throw new HttpError(404, 'That field does not exist.');
     const check = rows[0];
     if (check.already_started) throw new HttpError(400, 'Choose a future kick-off time.');
+    if (check.too_far_ahead) throw new HttpError(400, `Games can be booked at most ${MAX_DAYS_AHEAD} days ahead.`);
+    if (check.my_pending >= MAX_PENDING_BOOKINGS) {
+      throw new HttpError(409, `You already have ${MAX_PENDING_BOOKINGS} games waiting for field approval. Wait for an admin to review them, or call one off, before creating another.`);
+    }
     if (!check.inside_hours) throw new HttpError(409, `That time is outside ${check.field_name}'s opening hours.`);
     if (check.closure_reason) throw new HttpError(409, `${check.field_name} is closed then (${check.closure_reason}).`);
     if (check.approved_overlap) throw new HttpError(409, `${check.field_name} already has an approved game at that time.`);

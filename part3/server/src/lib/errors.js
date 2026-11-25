@@ -42,7 +42,17 @@ const CODE_MESSAGES = {
   '22008': [400, 'Invalid date or time.'],                    // datetime_field_overflow
   '22P02': [400, 'Invalid number or value.'],                 // invalid_text_representation
   '22021': [400, 'Some text contains characters that are not allowed.'], // character_not_in_repertoire
+  // Busy or slow moments: nothing is wrong with the request, so the user
+  // is told to try again (withTransaction already retried 40001/40P01 once).
+  '40001': [409, 'Someone else changed this at the same moment. Please try again.'], // serialization_failure
+  '40P01': [409, 'Someone else changed this at the same moment. Please try again.'], // deadlock_detected
+  '55P03': [409, 'Someone else is changing this right now. Please try again in a moment.'], // lock_not_available (lock_timeout)
+  '57014': [503, 'That took too long. Please try again.'],    // query_canceled (statement_timeout)
+  '53300': [503, 'The site is busy right now. Please try again in a moment.'], // too_many_connections
 };
+
+// Failing to reach the database at all (node-postgres and Node errors).
+const UNREACHABLE = /timeout exceeded when trying to connect|Connection terminated|ECONNREFUSED|ENOTFOUND|ETIMEDOUT/;
 
 /** Map any thrown error to { status, message } for the response. */
 export function toHttpError(err) {
@@ -56,6 +66,9 @@ export function toHttpError(err) {
   if (err?.expose && err.status >= 400 && err.status < 500) {
     const message = err.type === 'entity.too.large' ? 'The request is too large.' : 'Invalid request body.';
     return { status: err.status, message };
+  }
+  if (UNREACHABLE.test(`${err?.code ?? ''} ${err?.message ?? ''}`)) {
+    return { status: 503, message: 'The site is busy right now. Please try again in a moment.' };
   }
   return { status: 500, message: 'Something went wrong on our side. Please try again.' };
 }

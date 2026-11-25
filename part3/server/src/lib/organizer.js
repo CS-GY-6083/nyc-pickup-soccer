@@ -104,9 +104,22 @@ SELECT f.field_id,
              AND r.start_time < $3::timestamp
              AND $2::timestamp < r.end_time
        ) AS approved_overlap,
-       $2::timestamp <= nyc_now() AS already_started
+       $2::timestamp <= nyc_now() AS already_started,
+       $2::timestamp > nyc_now() + make_interval(days => $4::int) AS too_far_ahead,
+       (
+           SELECT COUNT(*)
+           FROM Reservation r
+           WHERE r.user_id = $5
+             AND r.status = 'pending'
+             AND r.start_time > nyc_now()
+       ) AS my_pending
 FROM Field f
 WHERE f.field_id = $1`;
+
+// Limits on new bookings, so one account cannot fill the admins' queue
+// or book fields years ahead.
+export const MAX_DAYS_AHEAD = 90;
+export const MAX_PENDING_BOOKINGS = 10;
 
 export const INSERT_RESERVATION_SQL = `
 INSERT INTO Reservation (user_id, field_id, start_time, end_time)
