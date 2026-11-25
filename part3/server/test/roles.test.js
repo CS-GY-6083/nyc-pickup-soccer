@@ -51,6 +51,8 @@ describe('soccer_app (the web app)', () => {
   test('changes only the status columns the use cases change', async () => {
     assert.equal(await canColumn('soccer_app', 'reservation', 'status', 'UPDATE'), true);
     assert.equal(await canColumn('soccer_app', 'pickupgame', 'status', 'UPDATE'), true);
+    assert.equal(await canColumn('soccer_app', 'pickupgame', 'delayed', 'UPDATE'), true);
+    assert.equal(await canColumn('soccer_app', 'pickupgame', 'delay_note', 'UPDATE'), true);
     assert.equal(await canColumn('soccer_app', 'gameregistration', 'registration_status', 'UPDATE'), true);
     for (const [table, column] of [
       ['reservation', 'start_time'], ['reservation', 'field_id'], ['pickupgame', 'max_players'],

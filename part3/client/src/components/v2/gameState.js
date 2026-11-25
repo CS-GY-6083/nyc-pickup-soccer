@@ -38,6 +38,23 @@ export function isUpcoming(game) {
 }
 
 /**
+ * The organizer's "delayed" flag (O3; spec: a flight's on-time/delayed
+ * status). Only said while the game is still to come or being played;
+ * once it is over or called off, its own status covers it.
+ *   { label: 'Delayed', note, detail } or null
+ */
+const DELAY_SHOWN = new Set(['confirmed', 'pending_field', 'in_progress']);
+export function delayInfo(game) {
+  if (!game?.delayed || !DELAY_SHOWN.has(game.game_state)) return null;
+  const note = game.delay_note || null;
+  return {
+    label: 'Delayed',
+    note,
+    detail: note ? `Note from the organizer: ${note}` : 'The organizer has marked this game as running late.',
+  };
+}
+
+/**
  * The logged-in viewer's own place in a game: "You're in" or "You left".
  * Uses my_registration and leave_closed from the game list
  * (server/src/lib/games.js, gameListSql with viewerId). Returns null when

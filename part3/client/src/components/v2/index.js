@@ -23,4 +23,5 @@ export {
   CARD, CONTROL, H2, LABEL, EmptyState, FieldOptions, Notice, Page, SectionHeading, Segmented, SelectField, Skeleton, TextArea, TextField, usePageTitle,
 } from './forms.jsx';
 export { BOROUGHS, BOROUGH_NAMES, boroughInfo } from './boroughs.js';
-export { GAME_STATES, gameState, capacity, isUpcoming, myStatus, myStatusText } from './gameState.js';
+export { GAME_STATES, gameState, capacity, delayInfo, isUpcoming, myStatus, myStatusText } from './gameState.js';
+export { default as DelayedTag } from './DelayedTag.jsx';
